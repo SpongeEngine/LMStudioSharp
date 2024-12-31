@@ -4,9 +4,9 @@
 [![License](https://img.shields.io/github/license/SpongeEngine/LocalAI.NET.KoboldCpp)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-6.0%20%7C%207.0%20%7C%208.0%2B-512BD4)](https://dotnet.microsoft.com/download)
 
-A .NET client library for KoboldCpp, providing a simple and efficient way to interact with KoboldCpp's text generation capabilities in your .NET applications. This library offers support for both KoboldCpp's native API and its OpenAI-compatible endpoints.
+A .NET client library for interacting with LM Studio through its native and, OpenAI-compatible API endpoints. This library provides a simple, efficient way to use LM Studio local LLMs in your .NET applications.
 
-This package serves as the KoboldCpp integration layer for the [LocalAI.NET](https://github.com/SpongeEngine/LocalAI.NET) ecosystem.
+This package serves as the LM Studio integration layer for the [LocalAI.NET](https://github.com/SpongeEngine/LocalAI.NET) ecosystem.
 
 ## Features
 - Complete support for KoboldCpp's native API
