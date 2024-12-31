@@ -1,4 +1,4 @@
-# LocalAI.NET.KoboldCpp
+# LocalAI.NET.LMStudio (In Progress)
 [![NuGet](https://img.shields.io/nuget/v/LocalAI.NET.KoboldCpp.svg)](https://www.nuget.org/packages/LocalAI.NET.KoboldCpp)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/LocalAI.NET.KoboldCpp.svg)](https://www.nuget.org/packages/LocalAI.NET.KoboldCpp)
 [![License](https://img.shields.io/github/license/SpongeEngine/LocalAI.NET.KoboldCpp)](LICENSE)
