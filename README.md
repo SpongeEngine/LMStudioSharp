@@ -1,4 +1,4 @@
-# LocalAI.NET.LMStudio (In Progress)
+# LocalAI.NET.LMStudio
 [![NuGet](https://img.shields.io/nuget/v/LocalAI.NET.LMStudio.svg)](https://www.nuget.org/packages/LocalAI.NET.LMStudio)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/LocalAI.NET.LMStudio.svg)](https://www.nuget.org/packages/LocalAI.NET.LMStudio)
 [![License](https://img.shields.io/github/license/SpongeEngine/LocalAI.NET.LMStudio)](LICENSE)
