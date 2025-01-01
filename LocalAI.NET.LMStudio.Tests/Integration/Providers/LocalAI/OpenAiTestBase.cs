@@ -1,4 +1,4 @@
-﻿using LocalAI.NET.LMStudio.Providers.OpenAiCompatible;
+﻿using LocalAI.NET.LMStudio.Providers.LocalAI;
 using LocalAI.NET.LMStudio.Tests.Common;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -9,7 +9,7 @@ namespace LocalAI.NET.LMStudio.Tests.Integration.Providers.OpenAiCompatible
 {
     public abstract class OpenAiTestBase : IAsyncLifetime
     {
-        protected readonly IOpenAiLmStudioProvider Provider;
+        protected readonly ILocalAiProvider Provider;
         protected readonly ITestOutputHelper Output;
         protected readonly ILogger Logger;
         protected bool ServerAvailable;
@@ -32,7 +32,7 @@ namespace LocalAI.NET.LMStudio.Tests.Integration.Providers.OpenAiCompatible
                 NullValueHandling = NullValueHandling.Ignore
             };
 
-            Provider = new OpenAiLmStudioProvider(
+            Provider = new LocalAiProvider(
                 httpClient, 
                 modelName: "",
                 logger: Logger, 

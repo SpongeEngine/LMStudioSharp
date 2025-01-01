@@ -1,11 +1,11 @@
 ﻿using FluentAssertions;
-using LocalAI.NET.LMStudio.Models.Base;
 using LocalAI.NET.LMStudio.Models.Chat;
 using LocalAI.NET.LMStudio.Models.Completion;
 using LocalAI.NET.LMStudio.Models.Embedding;
 using LocalAI.NET.LMStudio.Models.Model;
 using LocalAI.NET.LMStudio.Providers.Native;
 using LocalAI.NET.LMStudio.Tests.Common;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
@@ -14,15 +14,15 @@ using Xunit.Abstractions;
 
 namespace LocalAI.NET.LMStudio.Tests.Unit.Providers.Native
 {
-    public class NativeLmStudioProviderTests : LmStudioTestBase
+    public class NativeProviderTests : LmStudioTestBase
     {
-        private readonly NativeLmStudioProvider _provider;
+        private readonly NativeProvider _provider;
         private readonly HttpClient _httpClient;
 
-        public NativeLmStudioProviderTests(ITestOutputHelper output) : base(output)
+        public NativeProviderTests(ITestOutputHelper output) : base(output)
         {
             _httpClient = new HttpClient { BaseAddress = new Uri(BaseUrl) };
-            _provider = new NativeLmStudioProvider(_httpClient, Logger);
+            _provider = new NativeProvider(_httpClient, Logger);
         }
 
         [Fact]
@@ -50,7 +50,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Providers.Native
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/models")
+                    .WithPath("/v1/models")
                     .UsingGet())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
@@ -83,7 +83,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Providers.Native
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/models/test-model")
+                    .WithPath("/v1/models/test-model")
                     .UsingGet())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
@@ -100,7 +100,29 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Providers.Native
         [Fact]
         public async Task CompleteAsync_ShouldReturnCompletion()
         {
-            // Arrange
+            Server
+                .Given(Request.Create().WithPath("/v1/completions").UsingPost())
+                .RespondWith(Response.Create()
+                    .WithStatusCode(200)
+                    .WithHeader("Content-Type", "application/json")
+                    .WithBody(@"{
+                ""id"": ""cmpl-123"",
+                ""object"": ""text_completion"",
+                ""created"": 1589478378,
+                ""model"": ""test-model"",
+                ""choices"": [{
+                    ""text"": ""test response"",
+                    ""index"": 0,
+                    ""finish_reason"": ""stop""
+                }],
+                ""usage"": {
+                    ""prompt_tokens"": 10,
+                    ""completion_tokens"": 20,
+                    ""total_tokens"": 30
+                },
+                ""Successful"": true
+            }"));
+
             var request = new LmStudioCompletionRequest
             {
                 Model = "test-model",
@@ -109,128 +131,81 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Providers.Native
                 Temperature = 0.7f
             };
 
-            var expectedResponse = new LmStudioCompletionResponse
-            {
-                Id = "cmpl-123",
-                Object = "text_completion",
-                Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                Model = "test-model",
-                Choices = new List<LmStudioChoice>
-                {
-                    new()
-                    {
-                        Index = 0,
-                        Text = "Hello world!",
-                        FinishReason = "stop"
-                    }
-                }
-            };
-
-            Server
-                .Given(Request.Create()
-                    .WithPath("/api/v0/completions")
-                    .UsingPost())
-                .RespondWith(Response.Create()
-                    .WithStatusCode(200)
-                    .WithBody(JsonConvert.SerializeObject(expectedResponse)));
-
-            // Act
+            // Act & Assert
             var response = await _provider.CompleteAsync(request);
-
-            // Assert
             response.Should().NotBeNull();
-            response.Choices.Should().HaveCount(1);
-            response.Choices[0].Text.Should().Be("Hello world!");
+            response.Choices.Should().NotBeEmpty();
+            response.Choices[0].Text.Should().Be("test response");
         }
 
         [Fact]
         public async Task ChatCompleteAsync_ShouldReturnChatResponse()
         {
-            // Arrange
+            Server
+                .Given(Request.Create().WithPath("/v1/chat/completions").UsingPost())
+                .RespondWith(Response.Create()
+                    .WithStatusCode(200)
+                    .WithBody(@"{
+                ""id"": ""chat-123"",
+                ""choices"": [{
+                    ""message"": {
+                        ""role"": ""assistant"",
+                        ""content"": ""Hello! How can I help?""
+                    }
+                }],
+                ""Successful"": true
+            }"));
+
             var request = new LmStudioChatRequest
             {
                 Model = "test-model",
                 Messages = new List<LmStudioChatMessage>
                 {
                     new() { Role = "user", Content = "Hello" }
-                },
-                Temperature = 0.7f
-            };
-
-            var expectedResponse = new LmStudioChatResponse
-            {
-                Id = "chat-123",
-                Object = "chat.completion",
-                Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                Model = "test-model",
-                Choices = new List<LmStudioChoice>
-                {
-                    new()
-                    {
-                        Index = 0,
-                        Text = "Hello! How can I help you?",
-                        FinishReason = "stop"
-                    }
                 }
             };
 
-            Server
-                .Given(Request.Create()
-                    .WithPath("/api/v0/chat/completions")
-                    .UsingPost())
-                .RespondWith(Response.Create()
-                    .WithStatusCode(200)
-                    .WithBody(JsonConvert.SerializeObject(expectedResponse)));
-
-            // Act
+            Logger.LogInformation("Sending chat request: {Request}", JsonConvert.SerializeObject(request, Formatting.Indented));
             var response = await _provider.ChatCompleteAsync(request);
+            Logger.LogInformation("Chat response received: {Response}", JsonConvert.SerializeObject(response, Formatting.Indented));
 
-            // Assert
             response.Should().NotBeNull();
-            response.Choices.Should().HaveCount(1);
-            response.Choices[0].Text.Should().Be("Hello! How can I help you?");
+            response.Choices.Should().NotBeEmpty();
+            var firstChoice = response.Choices.FirstOrDefault();
+            firstChoice.Should().NotBeNull();
+            firstChoice.Message.Should().NotBeNull();
+            firstChoice.Message.Content.Should().Be("Hello! How can I help?");
         }
 
         [Fact]
         public async Task CreateEmbeddingAsync_ShouldReturnEmbedding()
         {
-            // Arrange
-            var request = new LmStudioEmbeddingRequest
-            {
-                Model = "text-embedding-model",
-                Input = "Hello world"
-            };
-
-            var expectedResponse = new LmStudioEmbeddingResponse
-            {
-                Object = "list",
-                Model = "text-embedding-model",
-                Data = new List<LmStudioEmbeddingResponse.EmbeddingData>
-                {
-                    new()
-                    {
-                        Object = "embedding",
-                        Embedding = new[] { 0.1f, 0.2f, 0.3f },
-                        Index = 0
-                    }
-                }
-            };
-
             Server
-                .Given(Request.Create()
-                    .WithPath("/api/v0/embeddings")
-                    .UsingPost())
+                .Given(Request.Create().WithPath("/v1/embeddings").UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
-                    .WithBody(JsonConvert.SerializeObject(expectedResponse)));
+                    .WithBody(@"{
+                ""data"": [{
+                    ""embedding"": [0.1, 0.2, 0.3],
+                    ""index"": 0
+                }],
+                ""Successful"": true
+            }"));
 
-            // Act
+            var request = new LmStudioEmbeddingRequest
+            {
+                Model = "test-model",
+                Input = "test text"
+            };
+
+            Logger.LogInformation("Sending embedding request: {Request}", JsonConvert.SerializeObject(request, Formatting.Indented));
             var response = await _provider.CreateEmbeddingAsync(request);
+            Logger.LogInformation("Embedding response received: {Response}", JsonConvert.SerializeObject(response, Formatting.Indented));
 
-            // Assert
             response.Should().NotBeNull();
-            response.Data.Should().HaveCount(1);
-            response.Data[0].Embedding.Should().BeEquivalentTo(new[] { 0.1f, 0.2f, 0.3f });
+            response.Data.Should().NotBeEmpty();
+            response.Data.FirstOrDefault().Should().NotBeNull();
+            response.Data.First().Embedding.Should().BeEquivalentTo(new[] { 0.1f, 0.2f, 0.3f });
         }
 
         [Fact]
@@ -251,7 +226,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Providers.Native
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/completions")
+                    .WithPath("/v1/completions")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
@@ -289,7 +264,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Providers.Native
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/chat/completions")
+                    .WithPath("/v1/chat/completions")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)

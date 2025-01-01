@@ -1,6 +1,6 @@
-﻿namespace LocalAI.NET.LMStudio.Providers.OpenAiCompatible
+﻿namespace LocalAI.NET.LMStudio.Providers.LocalAI
 {
-    public interface IOpenAiLmStudioProvider : IDisposable
+    public interface ILocalAiProvider : IDisposable
     {
         Task<string> CompleteAsync(string prompt, CompletionOptions? options = null, CancellationToken cancellationToken = default);
         IAsyncEnumerable<string> StreamCompletionAsync(string prompt, CompletionOptions? options = null, CancellationToken cancellationToken = default);

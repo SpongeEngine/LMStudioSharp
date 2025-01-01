@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using LocalAI.NET.LMStudio.Client;
-using LocalAI.NET.LMStudio.Models;
 using LocalAI.NET.LMStudio.Models.Base;
 using LocalAI.NET.LMStudio.Models.Chat;
 using LocalAI.NET.LMStudio.Models.Completion;
@@ -52,7 +51,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Client
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/models")
+                    .WithPath("/v1/models")
                     .UsingGet())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
@@ -85,7 +84,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Client
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/models/test-model")
+                    .WithPath("/v1/models/test-model")
                     .UsingGet())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
@@ -130,7 +129,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Client
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/completions")
+                    .WithPath("/v1/completions")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
@@ -178,7 +177,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Client
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/chat/completions")
+                    .WithPath("/v1/chat/completions")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
@@ -220,7 +219,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Client
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/embeddings")
+                    .WithPath("/v1/embeddings")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
@@ -253,7 +252,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Client
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/completions")
+                    .WithPath("/v1/completions")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
@@ -291,7 +290,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Client
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/chat/completions")
+                    .WithPath("/v1/chat/completions")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
@@ -347,7 +346,7 @@ namespace LocalAI.NET.LMStudio.Tests.Unit.Client
             // Arrange
             Server
                 .Given(Request.Create()
-                    .WithPath("/api/v0/models")
+                    .WithPath("/v1/models")
                     .UsingGet())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200));

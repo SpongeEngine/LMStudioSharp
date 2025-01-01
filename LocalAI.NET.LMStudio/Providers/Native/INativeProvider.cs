@@ -5,7 +5,7 @@ using LocalAI.NET.LMStudio.Models.Model;
 
 namespace LocalAI.NET.LMStudio.Providers.Native
 {
-    public interface INativeLmStudioProvider : IDisposable
+    public interface INativeProvider : IDisposable
     {
         Task<LmStudioModelsResponse> ListModelsAsync(CancellationToken cancellationToken = default);
         Task<LmStudioModel> GetModelAsync(string modelId, CancellationToken cancellationToken = default);

@@ -6,6 +6,8 @@
         /// Base URL of the LM Studio server
         /// </summary>
         public string BaseUrl { get; set; } = "http://localhost:1234";
+        
+        public string ApiVersion { get; set; } = "v1";
 
         /// <summary>
         /// Optional API key if authentication is enabled

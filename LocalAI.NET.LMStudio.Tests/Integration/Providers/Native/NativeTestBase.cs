@@ -10,7 +10,7 @@ namespace LocalAI.NET.LMStudio.Tests.Integration.Providers.Native
 {
     public abstract class NativeTestBase : IAsyncLifetime
     {
-        protected readonly INativeLmStudioProvider Provider;
+        protected readonly INativeProvider Provider;
         protected readonly ITestOutputHelper Output;
         protected readonly ILogger Logger;
         protected bool ServerAvailable;
@@ -34,7 +34,7 @@ namespace LocalAI.NET.LMStudio.Tests.Integration.Providers.Native
                 NullValueHandling = NullValueHandling.Ignore
             };
 
-            Provider = new NativeLmStudioProvider(httpClient, Logger, jsonSettings);
+            Provider = new NativeProvider(httpClient, Logger, jsonSettings);
         }
 
         public async Task InitializeAsync()

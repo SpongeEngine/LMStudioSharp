@@ -1,9 +1,10 @@
 ﻿using FluentAssertions;
-using LocalAI.NET.LMStudio.Providers.OpenAiCompatible;
+using LocalAI.NET.LMStudio.Providers.LocalAI;
+using LocalAI.NET.LMStudio.Tests.Integration.Providers.OpenAiCompatible;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace LocalAI.NET.LMStudio.Tests.Integration.Providers.OpenAiCompatible
+namespace LocalAI.NET.LMStudio.Tests.Integration.Providers.LocalAI
 {
     [Trait("Category", "Integration")]
     [Trait("API", "OpenAI")]

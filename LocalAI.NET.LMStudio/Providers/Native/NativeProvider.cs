@@ -12,7 +12,7 @@ using JsonException = Newtonsoft.Json.JsonException;
 
 namespace LocalAI.NET.LMStudio.Providers.Native
 {
-    public class NativeLmStudioProvider : INativeLmStudioProvider
+    public class NativeProvider : INativeProvider
     {
         private const string BASE_PATH = $"/v1";
         private const string MODELS_ENDPOINT = $"{BASE_PATH}/models";
@@ -25,7 +25,7 @@ namespace LocalAI.NET.LMStudio.Providers.Native
         private readonly JsonSerializerSettings? _jsonSettings;
         private bool _disposed;
 
-        public NativeLmStudioProvider(HttpClient httpClient, ILogger? logger = null, JsonSerializerSettings? jsonSettings = null)
+        public NativeProvider(HttpClient httpClient, ILogger? logger = null, JsonSerializerSettings? jsonSettings = null)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _logger = logger;

@@ -5,9 +5,9 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using JsonException = Newtonsoft.Json.JsonException;
 
-namespace LocalAI.NET.LMStudio.Providers.OpenAiCompatible
+namespace LocalAI.NET.LMStudio.Providers.LocalAI
 {
-    public class OpenAiLmStudioProvider : IOpenAiLmStudioProvider
+    public class LocalAiProvider : ILocalAiProvider
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger? _logger;
@@ -15,7 +15,7 @@ namespace LocalAI.NET.LMStudio.Providers.OpenAiCompatible
         private readonly string _modelName;
         private bool _disposed;
 
-        public OpenAiLmStudioProvider(
+        public LocalAiProvider(
             HttpClient httpClient, 
             string modelName = "",
             ILogger? logger = null,

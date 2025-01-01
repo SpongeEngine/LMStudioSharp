@@ -2,22 +2,25 @@
 using Betalgo.Ranul.OpenAI.Interfaces;
 using Betalgo.Ranul.OpenAI.ObjectModels.RequestModels;
 using Betalgo.Ranul.OpenAI.ObjectModels.ResponseModels;
+using Betalgo.Ranul.OpenAI.ObjectModels.SharedModels;
+using LocalAI.NET.LMStudio.Models;
 using LocalAI.NET.LMStudio.Models.Chat;
 using LocalAI.NET.LMStudio.Models.Completion;
 using LocalAI.NET.LMStudio.Models.Embedding;
 using LocalAI.NET.LMStudio.Models.Model;
 using LocalAI.NET.LMStudio.Providers.Native;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace LocalAI.NET.LMStudio.Providers.BetalgoOpenAI
 {
-   public class BetalgoOpenAiProvider : INativeLmStudioProvider
+   public class BetalgoProvider : INativeProvider
    {
        private readonly IOpenAIService _client;
        private readonly ILogger? _logger;
        private bool _disposed;
 
-       public BetalgoOpenAiProvider(IOpenAIService client, ILogger? logger = null)
+       public BetalgoProvider(IOpenAIService client, ILogger? logger = null)
        {
            _client = client;
            _logger = logger;
@@ -48,8 +51,12 @@ namespace LocalAI.NET.LMStudio.Providers.BetalgoOpenAI
            };
        }
 
-       public async Task<LmStudioCompletionResponse> CompleteAsync(LmStudioCompletionRequest request, CancellationToken cancellationToken = default)
+       public async Task<LmStudioCompletionResponse> CompleteAsync(
+           LmStudioCompletionRequest request, 
+           CancellationToken cancellationToken = default)
        {
+           _logger?.LogInformation("Sending completion request: {Request}", JsonConvert.SerializeObject(request));
+    
            var response = await _client.Completions.CreateCompletion(new CompletionCreateRequest
            {
                Model = request.Model,
@@ -59,20 +66,32 @@ namespace LocalAI.NET.LMStudio.Providers.BetalgoOpenAI
                Stop = request.Stop?.FirstOrDefault()
            }, null, cancellationToken);
 
-           return new LmStudioCompletionResponse
+           _logger?.LogInformation("Raw completion response: {Response}", JsonConvert.SerializeObject(response));
+
+           if (!response.Successful || response.Choices == null || !response.Choices.Any())
            {
-               Id = response.Id,
-               Object = "text_completion", 
+               var error = JsonConvert.SerializeObject(response);
+               _logger?.LogError("Completion failed with response: {Error}", error);
+               throw new LmStudioException($"Completion failed: {response.Error?.Message ?? "No choices returned"}", "LMStudio", responseContent: error);
+           }
+
+           var result = new LmStudioCompletionResponse
+           {
+               Id = response.Id ?? string.Empty,
+               Object = "text_completion",
                Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                Model = request.Model,
                Choices = response.Choices.Select(c => new Models.Base.LmStudioChoice
                {
-                   Text = c.Text,
+                   Text = c.Text ?? string.Empty,
                    Index = c.Index,
                    FinishReason = c.FinishReason
                }).ToList(),
                Usage = MapUsage(response.Usage)
            };
+
+           _logger?.LogInformation("Mapped completion response: {Result}", JsonConvert.SerializeObject(result));
+           return result;
        }
 
        public async Task<LmStudioChatResponse> ChatCompleteAsync(LmStudioChatRequest request, CancellationToken cancellationToken = default)
@@ -87,16 +106,16 @@ namespace LocalAI.NET.LMStudio.Providers.BetalgoOpenAI
 
            return new LmStudioChatResponse
            {
-               Id = response.Id,
+               Id = response.Id ?? string.Empty,
                Object = "chat.completion",
                Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                Model = request.Model,
-               Choices = response.Choices.Select(c => new Models.Base.LmStudioChoice
+               Choices = (response.Choices ?? new List<ChatChoiceResponse>()).Select(c => new Models.Base.LmStudioChoice
                {
                    Message = new LmStudioChatMessageResponse
                    {
-                       Role = c.Message.Role,
-                       Content = c.Message.Content
+                       Role = c.Message.Role ?? string.Empty,
+                       Content = c.Message.Content ?? string.Empty
                    },
                    Index = c.Index,
                    FinishReason = c.FinishReason
@@ -117,10 +136,10 @@ namespace LocalAI.NET.LMStudio.Providers.BetalgoOpenAI
            {
                Object = "list",
                Model = request.Model,
-               Data = response.Data.Select((e, i) => new LmStudioEmbeddingResponse.EmbeddingData
+               Data = (response.Data ?? new List<EmbeddingResponse>()).Select((e, i) => new LmStudioEmbeddingResponse.EmbeddingData
                {
                    Object = "embedding",
-                   Embedding = e.Embedding.Select(d => (float)d).ToArray(),
+                   Embedding = (e.Embedding ?? new List<double>()).Select(d => (float)d).ToArray(),
                    Index = i
                }).ToList(),
                Usage = MapUsage(response.Usage)
@@ -170,11 +189,11 @@ namespace LocalAI.NET.LMStudio.Providers.BetalgoOpenAI
            return response.Successful;
        }
 
-       private static Models.Base.LmStudioUsage MapUsage(UsageResponse usage) => new() 
+       private static Models.Base.LmStudioUsage MapUsage(UsageResponse? usage) => new() 
        { 
-           PromptTokens = usage.PromptTokens,
-           CompletionTokens = usage.CompletionTokens,
-           TotalTokens = usage.TotalTokens
+           PromptTokens = usage?.PromptTokens ?? 0,
+           CompletionTokens = usage?.CompletionTokens ?? 0,
+           TotalTokens = usage?.TotalTokens ?? 0
        };
 
        protected virtual void Dispose(bool disposing)

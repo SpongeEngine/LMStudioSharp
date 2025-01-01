@@ -4,8 +4,8 @@ using LocalAI.NET.LMStudio.Models.Chat;
 using LocalAI.NET.LMStudio.Models.Completion;
 using LocalAI.NET.LMStudio.Models.Embedding;
 using LocalAI.NET.LMStudio.Models.Model;
+using LocalAI.NET.LMStudio.Providers.LocalAI;
 using LocalAI.NET.LMStudio.Providers.Native;
-using LocalAI.NET.LMStudio.Providers.OpenAiCompatible;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -13,8 +13,8 @@ namespace LocalAI.NET.LMStudio.Client
 {
     public class LmStudioClient : IDisposable
     {
-        private readonly INativeLmStudioProvider? _nativeProvider;
-        private readonly IOpenAiLmStudioProvider? _openAiProvider;
+        private readonly INativeProvider? _nativeProvider;
+        private readonly ILocalAiProvider? _openAiProvider;
         private readonly LmStudioOptions _options;
         private bool _disposed;
 
@@ -42,17 +42,17 @@ namespace LocalAI.NET.LMStudio.Client
 
             if (options.UseOpenAiApi)
             {
-                _openAiProvider = new OpenAiLmStudioProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
+                _openAiProvider = new LocalAiProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
             }
             else
             {
-                _nativeProvider = new NativeLmStudioProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
+                _nativeProvider = new NativeProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
             }
         }
 
         /// <summary>
         /// Lists all loaded and downloaded models.
-        /// GET /api/v0/models
+        /// GET /v1/models
         /// </summary>
         public Task<LmStudioModelsResponse> ListModelsAsync(CancellationToken cancellationToken = default)
         {
@@ -62,7 +62,7 @@ namespace LocalAI.NET.LMStudio.Client
 
         /// <summary>
         /// Gets info about a specific model.
-        /// GET /api/v0/models/{model}
+        /// GET /v1/models/{model}
         /// </summary>
         public Task<LmStudioModel> GetModelAsync(string modelId, CancellationToken cancellationToken = default)
         {
@@ -72,7 +72,7 @@ namespace LocalAI.NET.LMStudio.Client
 
         /// <summary>
         /// Text Completions API. Provides a prompt and receives a completion.
-        /// POST /api/v0/completions
+        /// POST /v1/completions
         /// </summary>
         public Task<LmStudioCompletionResponse> CompleteAsync(
             LmStudioCompletionRequest request, 
@@ -84,7 +84,7 @@ namespace LocalAI.NET.LMStudio.Client
 
         /// <summary>
         /// Streaming Text Completions API.
-        /// POST /api/v0/completions with stream=true
+        /// POST /v1/completions with stream=true
         /// </summary>
         public IAsyncEnumerable<string> StreamCompletionAsync(
             LmStudioCompletionRequest request, 
@@ -96,7 +96,7 @@ namespace LocalAI.NET.LMStudio.Client
 
         /// <summary>
         /// Chat Completions API. Provides messages array and receives assistant response.
-        /// POST /api/v0/chat/completions
+        /// POST /v1/chat/completions
         /// </summary>
         public Task<LmStudioChatResponse> ChatCompleteAsync(
             LmStudioChatRequest request, 
@@ -108,7 +108,7 @@ namespace LocalAI.NET.LMStudio.Client
 
         /// <summary>
         /// Streaming Chat Completions API.
-        /// POST /api/v0/chat/completions with stream=true
+        /// POST /v1/chat/completions with stream=true
         /// </summary>
         public IAsyncEnumerable<string> StreamChatAsync(
             LmStudioChatRequest request, 
@@ -120,7 +120,7 @@ namespace LocalAI.NET.LMStudio.Client
 
         /// <summary>
         /// Text Embeddings API. Provides text and receives embedding vector.
-        /// POST /api/v0/embeddings
+        /// POST /v1/embeddings
         /// </summary>
         public Task<LmStudioEmbeddingResponse> CreateEmbeddingAsync(
             LmStudioEmbeddingRequest request, 
