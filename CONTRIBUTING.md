@@ -1,4 +1,4 @@
-# Contributing to LocalAI.NET
+# Contributing to LocalAI.NET.LMStudio
 
 ## Publishing to NuGet
 
