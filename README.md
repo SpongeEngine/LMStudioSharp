@@ -1,15 +1,15 @@
-# LocalAI.NET.KoboldCpp
-[![NuGet](https://img.shields.io/nuget/v/LocalAI.NET.KoboldCpp.svg)](https://www.nuget.org/packages/LocalAI.NET.KoboldCpp)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/LocalAI.NET.KoboldCpp.svg)](https://www.nuget.org/packages/LocalAI.NET.KoboldCpp)
-[![License](https://img.shields.io/github/license/SpongeEngine/LocalAI.NET.KoboldCpp)](LICENSE)
+# LocalAI.NET.LMStudio (In Progress)
+[![NuGet](https://img.shields.io/nuget/v/LocalAI.NET.LMStudio.svg)](https://www.nuget.org/packages/LocalAI.NET.LMStudio)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/LocalAI.NET.LMStudio.svg)](https://www.nuget.org/packages/LocalAI.NET.LMStudio)
+[![License](https://img.shields.io/github/license/SpongeEngine/LocalAI.NET.LMStudio)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-6.0%20%7C%207.0%20%7C%208.0%2B-512BD4)](https://dotnet.microsoft.com/download)
 
-A .NET client library for KoboldCpp, providing a simple and efficient way to interact with KoboldCpp's text generation capabilities in your .NET applications. This library offers support for both KoboldCpp's native API and its OpenAI-compatible endpoints.
+A .NET client library for interacting with LM Studio through its native and, OpenAI-compatible API endpoints. This library provides a simple, efficient way to use LM Studio local LLMs in your .NET applications.
 
-This package serves as the KoboldCpp integration layer for the [LocalAI.NET](https://github.com/SpongeEngine/LocalAI.NET) ecosystem.
+This package serves as the LM Studio integration layer for the [LocalAI.NET](https://github.com/SpongeEngine/LocalAI.NET) ecosystem.
 
 ## Features
-- Complete support for KoboldCpp's native API
+- Complete support for LMStudio's native API
 - OpenAI-compatible API endpoint support
 - Streaming text generation
 - Comprehensive configuration options
@@ -17,12 +17,12 @@ This package serves as the KoboldCpp integration layer for the [LocalAI.NET](htt
 - Cross-platform compatibility
 - Full async/await support
 
-📦 [View Package on NuGet](https://www.nuget.org/packages/LocalAI.NET.KoboldCpp)
+📦 [View Package on NuGet](https://www.nuget.org/packages/LocalAI.NET.LMStudio)
 
 ## Installation
 Install via NuGet:
 ```bash
-dotnet add package LocalAI.NET.KoboldCpp
+dotnet add package LocalAI.NET.LMStudio
 ```
 
 ## Quick Start
