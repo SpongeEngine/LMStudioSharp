@@ -4,9 +4,7 @@
 [![License](https://img.shields.io/github/license/SpongeEngine/LocalAI.NET.LMStudio)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-6.0%20%7C%207.0%20%7C%208.0%2B-512BD4)](https://dotnet.microsoft.com/download)
 
-A .NET client library for interacting with LM Studio through its native and, OpenAI-compatible API endpoints. This library provides a simple, efficient way to use LM Studio local LLMs in your .NET applications.
-
-This package serves as the LM Studio integration layer for the [LocalAI.NET](https://github.com/SpongeEngine/LocalAI.NET) ecosystem.
+C# client for interacting with LM Studio through its native an OpenAI-compatible endpoints.
 
 ## Features
 - Complete support for LMStudio's native API
