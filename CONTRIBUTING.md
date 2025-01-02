@@ -1,4 +1,4 @@
-# Contributing to LocalAI.NET.LMStudio
+# Contributing to LMStudioSharp
 
 ## Publishing to NuGet
 
@@ -7,16 +7,16 @@
 2. Generate an API key:
    - Go to https://www.nuget.org/account/apikeys
    - Click "Create"
-   - Name: "LocalAI.NET.LMStudio Publishing" (or your preferred name)
+   - Name: "SpongeEngine.LMStudioSharp" (or your preferred name)
    - Expiration: 365 days
    - Select "Push new packages and package versions"
-   - Glob Pattern: "LocalAI.NET.LMStudio*"
+   - Glob Pattern: "SpongeEngine.LMStudioSharp*"
    - Save the generated key securely
 
 ### Publishing Process
-1. Update version in `LocalAI.NET.LMStudio/LocalAI.NET.LMStudio.csproj`:
+1. Update version in `SpongeEngine.LMStudioSharp/SpongeEngine.LMStudioSharp.csproj`:
    ```xml
-   <Version>1.0.2</Version>   <!-- Change this to new version -->
+   <Version>1.1.0</Version>   <!-- Change this to new version -->
    ```
 
 2. Clean and pack:
@@ -27,10 +27,10 @@
 
 3. Push to NuGet:
    ```bash
-   dotnet nuget push .\LocalAI.NET.LMStudio\bin\Release\LocalAI.NET.LMStudio.1.1.0.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+   dotnet nuget push .\SpongeEngine.LMStudioSharp\bin\Release\SpongeEngine.LMStudioSharp.1.1.0.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
    ```
    Replace:
-   - `1.0.2` with your new version number
+   - `1.1.0` with your new version number
    - `YOUR_API_KEY` with your NuGet API key
 
 4. Wait 15-30 minutes for the package to appear on NuGet.org
