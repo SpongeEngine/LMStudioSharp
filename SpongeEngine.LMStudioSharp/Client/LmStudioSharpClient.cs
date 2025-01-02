@@ -6,23 +6,23 @@ using SpongeEngine.LMStudioSharp.Models.Chat;
 using SpongeEngine.LMStudioSharp.Models.Completion;
 using SpongeEngine.LMStudioSharp.Models.Embedding;
 using SpongeEngine.LMStudioSharp.Models.Model;
-using SpongeEngine.LMStudioSharp.Providers.LocalAI;
-using SpongeEngine.LMStudioSharp.Providers.Native;
+using SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative;
+using SpongeEngine.LMStudioSharp.Providers.LmStudioSharpOpenAiCompatible;
 
 namespace SpongeEngine.LMStudioSharp.Client
 {
     public class LmStudioSharpClient : IDisposable
     {
-        private readonly INativeProvider? _nativeProvider;
-        private readonly ILocalAiProvider? _openAiProvider;
-        private readonly LmStudioOptions _options;
+        private readonly ILmStudioSharpNativeProvider? _nativeProvider;
+        private readonly ILmStudioSharpOpenAiCompatibleProvider? _openAiProvider;
+        private readonly Options _options;
         private bool _disposed;
 
         public string Name => "LMStudio";
         public string? Version { get; private set; }
         public bool SupportsStreaming => true;
 
-        public LmStudioSharpClient(LmStudioOptions options, ILogger? logger = null, JsonSerializerSettings? jsonSettings = null)
+        public LmStudioSharpClient(Options options, ILogger? logger = null, JsonSerializerSettings? jsonSettings = null)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
 
@@ -42,11 +42,11 @@ namespace SpongeEngine.LMStudioSharp.Client
 
             if (options.UseOpenAiApi)
             {
-                _openAiProvider = new LocalAiProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
+                _openAiProvider = new LmStudioSharpOpenAiCompatibleProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
             }
             else
             {
-                _nativeProvider = new NativeProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
+                _nativeProvider = new LmStudioSharpNativeProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
             }
         }
 
@@ -54,7 +54,7 @@ namespace SpongeEngine.LMStudioSharp.Client
         /// Lists all loaded and downloaded models.
         /// GET /v1/models
         /// </summary>
-        public Task<LmStudioModelsResponse> ListModelsAsync(CancellationToken cancellationToken = default)
+        public Task<ModelsResponse> ListModelsAsync(CancellationToken cancellationToken = default)
         {
             EnsureNativeProvider();
             return _nativeProvider!.ListModelsAsync(cancellationToken);
@@ -64,7 +64,7 @@ namespace SpongeEngine.LMStudioSharp.Client
         /// Gets info about a specific model.
         /// GET /v1/models/{model}
         /// </summary>
-        public Task<LmStudioModel> GetModelAsync(string modelId, CancellationToken cancellationToken = default)
+        public Task<Model> GetModelAsync(string modelId, CancellationToken cancellationToken = default)
         {
             EnsureNativeProvider();
             return _nativeProvider!.GetModelAsync(modelId, cancellationToken);
@@ -74,8 +74,8 @@ namespace SpongeEngine.LMStudioSharp.Client
         /// Text Completions API. Provides a prompt and receives a completion.
         /// POST /v1/completions
         /// </summary>
-        public Task<LmStudioCompletionResponse> CompleteAsync(
-            LmStudioCompletionRequest request, 
+        public Task<CompletionResponse> CompleteAsync(
+            CompletionRequest request, 
             CancellationToken cancellationToken = default)
         {
             EnsureNativeProvider();
@@ -87,7 +87,7 @@ namespace SpongeEngine.LMStudioSharp.Client
         /// POST /v1/completions with stream=true
         /// </summary>
         public IAsyncEnumerable<string> StreamCompletionAsync(
-            LmStudioCompletionRequest request, 
+            CompletionRequest request, 
             CancellationToken cancellationToken = default)
         {
             EnsureNativeProvider();
@@ -98,8 +98,8 @@ namespace SpongeEngine.LMStudioSharp.Client
         /// Chat Completions API. Provides messages array and receives assistant response.
         /// POST /v1/chat/completions
         /// </summary>
-        public Task<LmStudioChatResponse> ChatCompleteAsync(
-            LmStudioChatRequest request, 
+        public Task<ChatResponse> ChatCompleteAsync(
+            ChatRequest request, 
             CancellationToken cancellationToken = default)
         {
             EnsureNativeProvider();
@@ -111,7 +111,7 @@ namespace SpongeEngine.LMStudioSharp.Client
         /// POST /v1/chat/completions with stream=true
         /// </summary>
         public IAsyncEnumerable<string> StreamChatAsync(
-            LmStudioChatRequest request, 
+            ChatRequest request, 
             CancellationToken cancellationToken = default)
         {
             EnsureNativeProvider();
@@ -122,8 +122,8 @@ namespace SpongeEngine.LMStudioSharp.Client
         /// Text Embeddings API. Provides text and receives embedding vector.
         /// POST /v1/embeddings
         /// </summary>
-        public Task<LmStudioEmbeddingResponse> CreateEmbeddingAsync(
-            LmStudioEmbeddingRequest request, 
+        public Task<EmbeddingResponse> CreateEmbeddingAsync(
+            EmbeddingRequest request, 
             CancellationToken cancellationToken = default)
         {
             EnsureNativeProvider();
