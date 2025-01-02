@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/SpongeEngine/LMStudioSharp)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-6.0%20%7C%207.0%20%7C%208.0%2B-512BD4)](https://dotnet.microsoft.com/download)
 
-A .NET client library for LM Studio, providing a simple and efficient way to interact with LM Studio's text generation capabilities in your .NET applications. Supports both the native LM Studio API and OpenAI-compatible endpoints.
+C# client for interacting with LM Studio through its native and OpenAI-compatible endpoints.
 
 ## Features
 - Complete support for LM Studio's native API
