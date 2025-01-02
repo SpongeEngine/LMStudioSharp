@@ -1,60 +1,84 @@
-# LocalAI.NET.LMStudio
-[![NuGet](https://img.shields.io/nuget/v/LocalAI.NET.LMStudio.svg)](https://www.nuget.org/packages/LocalAI.NET.LMStudio)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/LocalAI.NET.LMStudio.svg)](https://www.nuget.org/packages/LocalAI.NET.LMStudio)
-[![License](https://img.shields.io/github/license/SpongeEngine/LocalAI.NET.LMStudio)](LICENSE)
+# LMStudioSharp
+[![NuGet](https://img.shields.io/nuget/v/SpongeEngine.LMStudioSharp.svg)](https://www.nuget.org/packages/SpongeEngine.LMStudioSharp)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/SpongeEngine.LMStudioSharp.svg)](https://www.nuget.org/packages/SpongeEngine.LMStudioSharp)
+[![License](https://img.shields.io/github/license/SpongeEngine/LMStudioSharp)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-6.0%20%7C%207.0%20%7C%208.0%2B-512BD4)](https://dotnet.microsoft.com/download)
 
-C# client for interacting with LM Studio through its native and OpenAI-compatible endpoints.
+A .NET client library for LM Studio, providing a simple and efficient way to interact with LM Studio's text generation capabilities in your .NET applications. Supports both the native LM Studio API and OpenAI-compatible endpoints.
 
 ## Features
-- Complete support for LMStudio's native API
+- Complete support for LM Studio's native API
 - OpenAI-compatible API endpoint support
-- Streaming text generation
+- Text completion and chat completion
+- Streaming support for both completion types
+- Text embeddings generation
+- Model information retrieval
 - Comprehensive configuration options
 - Built-in error handling and logging
 - Cross-platform compatibility
 - Full async/await support
 
-📦 [View Package on NuGet](https://www.nuget.org/packages/LocalAI.NET.LMStudio)
+📦 [View Package on NuGet](https://www.nuget.org/packages/SpongeEngine.LMStudioSharp)
 
 ## Installation
 Install via NuGet:
 ```bash
-dotnet add package LocalAI.NET.LMStudio
+dotnet add package SpongeEngine.LMStudioSharp
 ```
 
 ## Quick Start
 
 ### Using Native API
 ```csharp
-using LocalAI.NET.KoboldCpp.Client;
-using LocalAI.NET.KoboldCpp.Models;
+using SpongeEngine.LMStudioSharp.Client;
+using SpongeEngine.LMStudioSharp.Models.Base;
+using SpongeEngine.LMStudioSharp.Models.Completion;
+using SpongeEngine.LMStudioSharp.Models.Chat;
 
 // Configure the client
-var options = new KoboldCppOptions
+var options = new Options
 {
-    BaseUrl = "http://localhost:5001",
-    UseGpu = true,
-    ContextSize = 2048
+    BaseUrl = "http://localhost:1234",
+    TimeoutSeconds = 600
 };
 
 // Create client instance
-using var client = new KoboldCppClient(options);
+using var client = new LmStudioSharpClient(options);
 
-// Generate completion
-var request = new KoboldCppRequest
+// List available models
+var models = await client.ListModelsAsync();
+var modelId = models.Data[0].Id;
+
+// Text completion
+var completionRequest = new CompletionRequest
 {
+    Model = modelId,
     Prompt = "Write a short story about a robot:",
-    MaxLength = 200,
+    MaxTokens = 200,
     Temperature = 0.7f,
     TopP = 0.9f
 };
 
-var response = await client.GenerateAsync(request);
-Console.WriteLine(response.Results[0].Text);
+var completionResponse = await client.CompleteAsync(completionRequest);
+Console.WriteLine(completionResponse.Choices[0].Text);
+
+// Chat completion
+var chatRequest = new ChatRequest
+{
+    Model = modelId,
+    Messages = new List<ChatMessage>
+    {
+        new() { Role = "system", Content = "You are a helpful assistant." },
+        new() { Role = "user", Content = "Tell me a joke about programming." }
+    },
+    Temperature = 0.7f
+};
+
+var chatResponse = await client.ChatCompleteAsync(chatRequest);
+Console.WriteLine(chatResponse.Choices[0].Message.Content);
 
 // Stream completion
-await foreach (var token in client.GenerateStreamAsync(request))
+await foreach (var token in client.StreamCompletionAsync(completionRequest))
 {
     Console.Write(token);
 }
@@ -62,26 +86,25 @@ await foreach (var token in client.GenerateStreamAsync(request))
 
 ### Using OpenAI-Compatible API
 ```csharp
-var options = new KoboldCppOptions
+var options = new Options
 {
-    BaseUrl = "http://localhost:5001",
+    BaseUrl = "http://localhost:1234",
     UseOpenAiApi = true
 };
 
-using var client = new KoboldCppClient(options);
+using var client = new LmStudioSharpClient(options);
 
 // Simple completion
-string response = await client.CompleteAsync(
+string response = await client.CompleteWithOpenAiAsync(
     "Write a short story about:",
     new CompletionOptions
     {
         MaxTokens = 200,
-        Temperature = 0.7f,
-        TopP = 0.9f
+        Temperature = 0.7f
     });
 
 // Stream completion
-await foreach (var token in client.StreamCompletionAsync(
+await foreach (var token in client.StreamCompletionWithOpenAiAsync(
     "Once upon a time...",
     new CompletionOptions { MaxTokens = 200 }))
 {
@@ -93,38 +116,27 @@ await foreach (var token in client.StreamCompletionAsync(
 
 ### Basic Options
 ```csharp
-var options = new KoboldCppOptions
+var options = new Options
 {
-    BaseUrl = "http://localhost:5001",    // KoboldCpp server URL
+    BaseUrl = "http://localhost:1234",    // LM Studio server URL
+    ApiVersion = "v1",                    // API version
     ApiKey = "optional_api_key",          // Optional API key
     TimeoutSeconds = 600,                 // Request timeout
-    ContextSize = 2048,                   // Maximum context size
-    UseGpu = true,                        // Enable GPU acceleration
     UseOpenAiApi = false                  // Use OpenAI-compatible API
 };
 ```
 
-### Advanced Generation Parameters
+### Completion Request Parameters
 ```csharp
-var request = new KoboldCppRequest
+var request = new CompletionRequest
 {
+    Model = "model-id",
     Prompt = "Your prompt here",
-    MaxLength = 200,                      // Maximum tokens to generate
-    MaxContextLength = 2048,              // Maximum context length
+    MaxTokens = 200,                      // Maximum tokens to generate
     Temperature = 0.7f,                   // Randomness (0.0-1.0)
     TopP = 0.9f,                          // Nucleus sampling threshold
-    TopK = 40,                            // Top-K sampling
-    TopA = 0.0f,                          // Top-A sampling
-    Typical = 1.0f,                       // Typical sampling
-    Tfs = 1.0f,                          // Tail-free sampling
-    RepetitionPenalty = 1.1f,            // Repetition penalty
-    RepetitionPenaltyRange = 64,         // Penalty range
-    StopSequences = new List<string> { "\n" },  // Stop sequences
-    Stream = false,                       // Enable streaming
-    TrimStop = true,                     // Trim stop sequences
-    MirostatMode = 0,                    // Mirostat sampling mode
-    MirostatTau = 5.0f,                  // Mirostat target entropy
-    MirostatEta = 0.1f                   // Mirostat learning rate
+    Stop = new[] { "\n" },               // Stop sequences
+    Stream = false                        // Enable streaming
 };
 ```
 
@@ -132,11 +144,11 @@ var request = new KoboldCppRequest
 ```csharp
 try
 {
-    var response = await client.GenerateAsync(request);
+    var response = await client.CompleteAsync(request);
 }
-catch (KoboldCppException ex)
+catch (SpongeEngine.LMStudioSharp.Models.Exception ex)
 {
-    Console.WriteLine($"KoboldCpp error: {ex.Message}");
+    Console.WriteLine($"LM Studio error: {ex.Message}");
     Console.WriteLine($"Provider: {ex.Provider}");
     if (ex.StatusCode.HasValue)
     {
@@ -161,9 +173,9 @@ ILogger logger = LoggerFactory
     .Create(builder => builder
         .AddConsole()
         .SetMinimumLevel(LogLevel.Debug))
-    .CreateLogger<KoboldCppClient>();
+    .CreateLogger<LmStudioSharpClient>();
 
-var client = new KoboldCppClient(options, logger);
+var client = new LmStudioSharpClient(options, logger);
 ```
 
 ## JSON Serialization
@@ -176,11 +188,11 @@ var jsonSettings = new JsonSerializerSettings
     DefaultValueHandling = DefaultValueHandling.Ignore
 };
 
-var client = new KoboldCppClient(options, jsonSettings: jsonSettings);
+var client = new LmStudioSharpClient(options, logger: null, jsonSettings: jsonSettings);
 ```
 
 ## Testing
-The library includes both unit and integration tests. Integration tests require a running KoboldCpp server.
+The library includes both unit and integration tests. Integration tests require a running LM Studio server.
 
 To run the tests:
 ```bash
@@ -190,8 +202,8 @@ dotnet test
 To configure the test environment:
 ```csharp
 // Set environment variables for testing
-Environment.SetEnvironmentVariable("KOBOLDCPP_BASE_URL", "http://localhost:5001");
-Environment.SetEnvironmentVariable("KOBOLDCPP_OPENAI_BASE_URL", "http://localhost:5001/v1");
+Environment.SetEnvironmentVariable("LMSTUDIO_BASE_URL", "http://localhost:1234");
+Environment.SetEnvironmentVariable("LMSTUDIO_OPENAI_BASE_URL", "http://localhost:1234/v1");
 ```
 
 ## License
@@ -201,4 +213,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Support
-For issues and feature requests, please use the [GitHub issues page](https://github.com/SpongeEngine/LocalAI.NET.KoboldCpp/issues).
+For issues and feature requests, please use the [GitHub issues page](https://github.com/SpongeEngine/LMStudioSharp/issues).
