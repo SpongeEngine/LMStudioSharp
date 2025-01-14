@@ -323,39 +323,5 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit.Client
             act.Should().ThrowAsync<InvalidOperationException>()
                 .WithMessage("Native API is not enabled. Set UseOpenAiApi to false in options.");
         }
-
-        [Fact]
-        public void UseOpenAiApi_WhenUsingNativeApi_ShouldThrow()
-        {
-            // Arrange
-            var client = new LmStudioSharpClient(new Options
-            {
-                BaseUrl = BaseUrl,
-                UseOpenAiApi = false
-            }, Logger);
-
-            // Act & Assert
-            var act = () => client.CompleteWithOpenAiAsync("test");
-            act.Should().ThrowAsync<InvalidOperationException>()
-                .WithMessage("OpenAI API is not enabled. Set UseOpenAiApi to true in options.");
-        }
-
-        [Fact]
-        public async Task IsAvailableAsync_WhenServerResponds_WithNativeApi_ShouldReturnTrue()
-        {
-            // Arrange
-            Server
-                .Given(Request.Create()
-                    .WithPath("/v1/models")
-                    .UsingGet())
-                .RespondWith(Response.Create()
-                    .WithStatusCode(200));
-
-            // Act
-            var isAvailable = await _sharpClient.IsAvailableAsync();
-
-            // Assert
-            isAvailable.Should().BeTrue();
-        }
     }
 }

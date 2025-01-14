@@ -7,14 +7,12 @@ using SpongeEngine.LMStudioSharp.Models.Completion;
 using SpongeEngine.LMStudioSharp.Models.Embedding;
 using SpongeEngine.LMStudioSharp.Models.Model;
 using SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative;
-using SpongeEngine.LMStudioSharp.Providers.LmStudioSharpOpenAiCompatible;
 
 namespace SpongeEngine.LMStudioSharp.Client
 {
     public class LmStudioSharpClient : IDisposable
     {
-        private readonly ILmStudioSharpNativeProvider? _nativeProvider;
-        private readonly ILmStudioSharpOpenAiCompatibleProvider? _openAiProvider;
+        private readonly LmStudioSharpNativeProvider? _nativeProvider;
         private readonly Options _options;
         private bool _disposed;
 
@@ -40,14 +38,7 @@ namespace SpongeEngine.LMStudioSharp.Client
                 httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {options.ApiKey}");
             }
 
-            if (options.UseOpenAiApi)
-            {
-                _openAiProvider = new LmStudioSharpOpenAiCompatibleProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
-            }
-            else
-            {
-                _nativeProvider = new LmStudioSharpNativeProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
-            }
+            _nativeProvider = new LmStudioSharpNativeProvider(httpClient, logger: logger, jsonSettings: jsonSettings);
         }
 
         /// <summary>
@@ -129,43 +120,11 @@ namespace SpongeEngine.LMStudioSharp.Client
             EnsureNativeProvider();
             return _nativeProvider!.CreateEmbeddingAsync(request, cancellationToken);
         }
-
-        // OpenAI API methods
-        public Task<string> CompleteWithOpenAiAsync(
-            string prompt, 
-            CompletionOptions? options = null, 
-            CancellationToken cancellationToken = default)
-        {
-            EnsureOpenAiProvider();
-            return _openAiProvider!.CompleteAsync(prompt, options, cancellationToken);
-        }
-
-        public IAsyncEnumerable<string> StreamCompletionWithOpenAiAsync(
-            string prompt, 
-            CompletionOptions? options = null, 
-            CancellationToken cancellationToken = default)
-        {
-            EnsureOpenAiProvider();
-            return _openAiProvider!.StreamCompletionAsync(prompt, options, cancellationToken);
-        }
-
-        public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
-        {
-            return _options.UseOpenAiApi 
-                ? await _openAiProvider!.IsAvailableAsync(cancellationToken)
-                : await _nativeProvider!.IsAvailableAsync(cancellationToken);
-        }
-
+        
         private void EnsureNativeProvider()
         {
             if (_nativeProvider == null)
                 throw new InvalidOperationException("Native API is not enabled. Set UseOpenAiApi to false in options.");
-        }
-
-        private void EnsureOpenAiProvider()
-        {
-            if (_openAiProvider == null)
-                throw new InvalidOperationException("OpenAI API is not enabled. Set UseOpenAiApi to true in options.");
         }
 
         protected virtual void Dispose(bool disposing)
@@ -175,7 +134,6 @@ namespace SpongeEngine.LMStudioSharp.Client
                 if (disposing)
                 {
                     _nativeProvider?.Dispose();
-                    _openAiProvider?.Dispose();
                 }
                 _disposed = true;
             }

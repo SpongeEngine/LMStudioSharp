@@ -12,7 +12,7 @@ using JsonException = Newtonsoft.Json.JsonException;
 
 namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
 {
-    public sealed class LmStudioSharpNativeProvider : ILmStudioSharpNativeProvider
+    public sealed class LmStudioSharpNativeProvider
     {
         private const string BASE_PATH = $"/v1";
         private const string MODELS_ENDPOINT = $"{BASE_PATH}/models";

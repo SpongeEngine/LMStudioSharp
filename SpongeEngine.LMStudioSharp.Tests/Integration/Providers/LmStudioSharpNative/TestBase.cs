@@ -10,7 +10,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration.Providers.LmStudioSharpNa
 {
     public abstract class TestBase : IAsyncLifetime
     {
-        protected readonly ILmStudioSharpNativeProvider Provider;
+        protected readonly LmStudioSharpNativeProvider Provider;
         protected readonly ITestOutputHelper Output;
         protected readonly ILogger Logger;
         protected bool ServerAvailable;
@@ -78,10 +78,6 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration.Providers.LmStudioSharpNa
 
         public Task DisposeAsync()
         {
-            if (Provider is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
             return Task.CompletedTask;
         }
 
