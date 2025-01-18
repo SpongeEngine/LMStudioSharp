@@ -1,23 +1,23 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 using SpongeEngine.LMStudioSharp.Models.Chat;
 
 namespace SpongeEngine.LMStudioSharp.Models.Base
 {
     public class Choice
     {
-        [JsonProperty("index")]
+        [JsonPropertyName("index")]
         public int? Index { get; set; }
 
-        [JsonProperty("text")]
+        [JsonPropertyName("text")]
         public string? Text { get; set; }
 
-        [JsonProperty("message")]
+        [JsonPropertyName("message")]
         public MessageResponse? Message { get; set; }
 
-        [JsonProperty("logprobs")]
+        [JsonPropertyName("logprobs")]
         public object? LogProbs { get; set; }
 
-        [JsonProperty("finish_reason")]
+        [JsonPropertyName("finish_reason")]
         public string? FinishReason { get; set; }
 
         // Helper property to get the text content regardless of type

@@ -1,14 +1,15 @@
 ﻿using FluentAssertions;
 using SpongeEngine.LMStudioSharp.Models.Chat;
 using SpongeEngine.LMStudioSharp.Models.Completion;
+using SpongeEngine.LMStudioSharp.Tests.Common;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace SpongeEngine.LMStudioSharp.Tests.Integration.Providers.LmStudioSharpNative
+namespace SpongeEngine.LMStudioSharp.Tests.Integration
 {
     [Trait("Category", "Integration")]
     [Trait("API", "Native")]
-    public class Tests : TestBase
+    public class Tests : LmStudioTestBase
     {
         public Tests(ITestOutputHelper output) : base(output) { }
 
@@ -29,7 +30,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration.Providers.LmStudioSharpNa
             };
 
             // Act
-            var response = await Provider.CompleteAsync(request);
+            var response = await Client.CompleteAsync(request);
 
             // Assert
             response.Should().NotBeNull();
@@ -58,7 +59,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration.Providers.LmStudioSharpNa
 
             try
             {
-                await foreach (var token in Provider.StreamCompletionAsync(request, cts.Token))
+                await foreach (var token in Client.StreamCompletionAsync(request, cts.Token))
                 {
                     tokens.Add(token);
                     Output.WriteLine($"Received token: {token}");
@@ -102,7 +103,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration.Providers.LmStudioSharpNa
             };
 
             // Act
-            var response = await Provider.CompleteAsync(request);
+            var response = await Client.CompleteAsync(request);
 
             // Assert
             response.Should().NotBeNull();
@@ -131,7 +132,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration.Providers.LmStudioSharpNa
                 };
 
                 // Act
-                var response = await Provider.CompleteAsync(request);
+                var response = await Client.CompleteAsync(request);
 
                 // Assert
                 response.Should().NotBeNull();
@@ -162,7 +163,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration.Providers.LmStudioSharpNa
             };
 
             // Act
-            var response = await Provider.ChatCompleteAsync(request);
+            var response = await Client.ChatCompleteAsync(request);
 
             // Assert
             response.Should().NotBeNull();

@@ -1,13 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SpongeEngine.LMStudioSharp.Models.Model
 {
     public class ModelsResponse
     {
-        [JsonProperty("object")]
+        [JsonPropertyName("object")]
         public string Object { get; set; } = "list";
     
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public List<Model> Data { get; set; } = new();
     }
 }

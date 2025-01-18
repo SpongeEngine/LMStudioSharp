@@ -1,19 +1,19 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SpongeEngine.LMStudioSharp.Models.Base
 {
     public class ModelInfo
     {
-        [JsonProperty("arch")]
+        [JsonPropertyName("arch")]
         public string Architecture { get; set; } = string.Empty;
     
-        [JsonProperty("quant")]
+        [JsonPropertyName("quant")]
         public string Quantization { get; set; } = string.Empty;
     
-        [JsonProperty("format")]
+        [JsonPropertyName("format")]
         public string Format { get; set; } = string.Empty;
     
-        [JsonProperty("context_length")]
+        [JsonPropertyName("context_length")]
         public int ContextLength { get; set; }
     }
 

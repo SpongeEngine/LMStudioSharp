@@ -1,31 +1,31 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 using SpongeEngine.LMStudioSharp.Models.Base;
 
 namespace SpongeEngine.LMStudioSharp.Models.Embedding
 {
     public class EmbeddingResponse
     {
-        [JsonProperty("object")]
+        [JsonPropertyName("object")]
         public string Object { get; set; } = "list";
     
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public List<EmbeddingData> Data { get; set; } = new();
     
-        [JsonProperty("model")]
+        [JsonPropertyName("model")]
         public string Model { get; set; } = string.Empty;
     
-        [JsonProperty("usage")]
+        [JsonPropertyName("usage")]
         public Usage Usage { get; set; } = new();
     
         public class EmbeddingData
         {
-            [JsonProperty("object")]
+            [JsonPropertyName("object")]
             public string Object { get; set; } = "embedding";
         
-            [JsonProperty("embedding")]
+            [JsonPropertyName("embedding")]
             public float[] Embedding { get; set; } = Array.Empty<float>();
         
-            [JsonProperty("index")]
+            [JsonPropertyName("index")]
             public int Index { get; set; }
         }
     }

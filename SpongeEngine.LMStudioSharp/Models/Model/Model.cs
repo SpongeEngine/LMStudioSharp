@@ -1,34 +1,34 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SpongeEngine.LMStudioSharp.Models.Model
 {
     public class Model
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; } = string.Empty;
     
-        [JsonProperty("object")]
+        [JsonPropertyName("object")]
         public string Object { get; set; } = string.Empty;
     
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public string Type { get; set; } = string.Empty;
     
-        [JsonProperty("publisher")]
+        [JsonPropertyName("publisher")]
         public string Publisher { get; set; } = string.Empty;
     
-        [JsonProperty("arch")]
+        [JsonPropertyName("arch")]
         public string Architecture { get; set; } = string.Empty;
     
-        [JsonProperty("compatibility_type")]
+        [JsonPropertyName("compatibility_type")]
         public string CompatibilityType { get; set; } = string.Empty;
     
-        [JsonProperty("quantization")]
+        [JsonPropertyName("quantization")]
         public string Quantization { get; set; } = string.Empty;
     
-        [JsonProperty("state")]
+        [JsonPropertyName("state")]
         public string State { get; set; } = string.Empty;
     
-        [JsonProperty("max_context_length")]
+        [JsonPropertyName("max_context_length")]
         public int MaxContextLength { get; set; }
     }
 }

@@ -1,42 +1,38 @@
 ﻿using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using SpongeEngine.LLMSharp.Core;
+using SpongeEngine.LLMSharp.Core.Exceptions;
 using SpongeEngine.LMStudioSharp.Models.Chat;
 using SpongeEngine.LMStudioSharp.Models.Completion;
 using SpongeEngine.LMStudioSharp.Models.Embedding;
 using SpongeEngine.LMStudioSharp.Models.Model;
-using Exception = SpongeEngine.LMStudioSharp.Models.Exception;
-using JsonException = Newtonsoft.Json.JsonException;
 
-namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
+namespace SpongeEngine.LMStudioSharp
 {
-    public sealed class LmStudioSharpNativeProvider
+    public class LmStudioSharpClient : LlmClientBase
     {
+        public override LmStudioClientOptions Options { get; }
+        
         private const string BASE_PATH = $"/v1";
         private const string MODELS_ENDPOINT = $"{BASE_PATH}/models";
         private const string CHAT_ENDPOINT = $"{BASE_PATH}/chat/completions"; 
         private const string COMPLETIONS_ENDPOINT = $"{BASE_PATH}/completions";
         private const string EMBEDDINGS_ENDPOINT = $"{BASE_PATH}/embeddings";
 
-        private readonly HttpClient _httpClient;
-        private readonly ILogger? _logger;
-        private readonly JsonSerializerSettings? _jsonSettings;
-        private bool _disposed;
-
-        public LmStudioSharpNativeProvider(HttpClient httpClient, ILogger? logger = null, JsonSerializerSettings? jsonSettings = null)
+        public LmStudioSharpClient(LmStudioClientOptions options) : base(options)
         {
-            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            _logger = logger;
-            _jsonSettings = jsonSettings;
+            Options = options;
         }
 
         public async Task<ModelsResponse> ListModelsAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                var response = await _httpClient.GetAsync(MODELS_ENDPOINT, cancellationToken);
+                var response = await Options.HttpClient.GetAsync(MODELS_ENDPOINT, cancellationToken);
                 await HandleResponseError(response, "Failed to list models");
                 
                 return await DeserializeResponse<ModelsResponse>(response);
@@ -51,7 +47,7 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{MODELS_ENDPOINT}/{modelId}", cancellationToken);
+                var response = await Options.HttpClient.GetAsync($"{MODELS_ENDPOINT}/{modelId}", cancellationToken);
                 await HandleResponseError(response, "Failed to get model");
                 
                 return await DeserializeResponse<Model>(response);
@@ -62,19 +58,17 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
             }
         }
 
-        public async Task<CompletionResponse> CompleteAsync(
-            CompletionRequest request,
-            CancellationToken cancellationToken = default)
+        public async Task<CompletionResponse> CompleteAsync(CompletionRequest request, CancellationToken cancellationToken = default)
         {
             try
             {
-                _logger?.LogDebug("Completion request: {Request}", JsonConvert.SerializeObject(request));
+                Options.Logger?.LogDebug("Completion request: {Request}", JsonSerializer.Serialize(request));
                 
                 var response = await PostAsJsonAsync(COMPLETIONS_ENDPOINT, request, cancellationToken);
                 await HandleResponseError(response, "Completion failed");
                 
                 var result = await DeserializeResponse<CompletionResponse>(response);
-                _logger?.LogDebug("Completion response: {Response}", JsonConvert.SerializeObject(result));
+                Options.Logger?.LogDebug("Completion response: {Response}", JsonSerializer.Serialize(result));
                 
                 return result;
             }
@@ -84,19 +78,17 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
             }
         }
 
-        public async Task<ChatResponse> ChatCompleteAsync(
-            ChatRequest request, 
-            CancellationToken cancellationToken = default)
+        public async Task<ChatResponse> ChatCompleteAsync(ChatRequest request, CancellationToken cancellationToken = default)
         {
             try
             {
-                _logger?.LogDebug("Chat request: {Request}", JsonConvert.SerializeObject(request));
+                Options.Logger?.LogDebug("Chat request: {Request}", JsonSerializer.Serialize(request));
                 
                 var response = await PostAsJsonAsync(CHAT_ENDPOINT, request, cancellationToken);
                 await HandleResponseError(response, "Chat completion failed");
                 
                 var result = await DeserializeResponse<ChatResponse>(response);
-                _logger?.LogDebug("Chat response: {Response}", JsonConvert.SerializeObject(result));
+                Options.Logger?.LogDebug("Chat response: {Response}", JsonSerializer.Serialize(result));
                 
                 return result;
             }
@@ -106,19 +98,17 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
             }
         }
 
-        public async Task<EmbeddingResponse> CreateEmbeddingAsync(
-            EmbeddingRequest request,
-            CancellationToken cancellationToken = default)
+        public async Task<EmbeddingResponse> CreateEmbeddingAsync(EmbeddingRequest request, CancellationToken cancellationToken = default)
         {
             try
             {
-                _logger?.LogDebug("Embedding request: {Request}", JsonConvert.SerializeObject(request));
+                Options.Logger?.LogDebug("Embedding request: {Request}", JsonSerializer.Serialize(request));
                 
                 var response = await PostAsJsonAsync(EMBEDDINGS_ENDPOINT, request, cancellationToken);
                 await HandleResponseError(response, "Embedding creation failed");
                 
                 var result = await DeserializeResponse<EmbeddingResponse>(response);
-                _logger?.LogDebug("Embedding response: {Response}", JsonConvert.SerializeObject(result));
+                Options.Logger?.LogDebug("Embedding response: {Response}", JsonSerializer.Serialize(result));
                 
                 return result;
             }
@@ -128,9 +118,7 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
             }
         }
 
-        public async IAsyncEnumerable<string> StreamCompletionAsync(
-            CompletionRequest request,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<string> StreamCompletionAsync(CompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             request.Stream = true;
             await foreach (var token in StreamResponseAsync(COMPLETIONS_ENDPOINT, request, cancellationToken))
@@ -139,9 +127,7 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
             }
         }
 
-        public async IAsyncEnumerable<string> StreamChatAsync(
-            ChatRequest request,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<string> StreamChatAsync(ChatRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             request.Stream = true;
             await foreach (var token in StreamResponseAsync(CHAT_ENDPOINT, request, cancellationToken))
@@ -154,7 +140,7 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
         {
             try
             {
-                var response = await _httpClient.GetAsync(MODELS_ENDPOINT, cancellationToken);
+                var response = await Options.HttpClient.GetAsync(MODELS_ENDPOINT, cancellationToken);
                 return response.IsSuccessStatusCode;
             }
             catch
@@ -165,9 +151,9 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
 
         private async Task<HttpResponseMessage> PostAsJsonAsync<T>(string endpoint, T content, CancellationToken cancellationToken)
         {
-            var json = JsonConvert.SerializeObject(content, _jsonSettings);
+            var json = JsonSerializer.Serialize(content, Options.JsonSerializerOptions);
             var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
-            return await _httpClient.PostAsync(endpoint, stringContent, cancellationToken);
+            return await Options.HttpClient.PostAsync(endpoint, stringContent, cancellationToken);
         }
 
         private async Task HandleResponseError(HttpResponseMessage response, string errorMessage)
@@ -175,11 +161,10 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
             if (!response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                _logger?.LogError("Response error: Status={Status}, Content={Content}", response.StatusCode, content);
+                Options.Logger?.LogError("Response error: Status={Status}, Content={Content}", response.StatusCode, content);
                 
-                throw new Exception(
+                throw new LlmSharpException(
                     errorMessage,
-                    "LMStudio",
                     (int)response.StatusCode,
                     content);
             }
@@ -190,12 +175,11 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
             var content = await response.Content.ReadAsStringAsync();
             try
             {
-                var result = JsonConvert.DeserializeObject<T>(content, _jsonSettings);
+                var result = JsonSerializer.Deserialize<T>(content, Options.JsonSerializerOptions);
                 if (result == null)
                 {
-                    throw new Exception(
+                    throw new LlmSharpException(
                         "Null response after deserialization",
-                        "LMStudio",
                         null,
                         content);
                 }
@@ -203,31 +187,27 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
             }
             catch (JsonException ex)
             {
-                _logger?.LogError(ex, "Failed to deserialize response: {Content}", content);
-                throw new Exception(
+                Options.Logger?.LogError(ex, "Failed to deserialize response: {Content}", content);
+                throw new LlmSharpException(
                     "Failed to deserialize response",
-                    "LMStudio",
                     null,
                     $"Content: {content}, Error: {ex.Message}");
             }
         }
 
-        private async IAsyncEnumerable<string> StreamResponseAsync<T>(
-            string endpoint,
-            T request,
-            [EnumeratorCancellation] CancellationToken cancellationToken)
+        private async IAsyncEnumerable<string> StreamResponseAsync<T>(string endpoint, T request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, endpoint)
             {
                 Content = new StringContent(
-                    JsonConvert.SerializeObject(request, _jsonSettings),
+                    JsonSerializer.Serialize(request, Options.JsonSerializerOptions),
                     Encoding.UTF8,
                     "application/json")
             };
 
             httpRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-            using var response = await _httpClient.SendAsync(
+            using var response = await Options.HttpClient.SendAsync(
                 httpRequest,
                 HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken);
@@ -246,7 +226,7 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
                     continue;
                 }
 
-                _logger?.LogDebug("Received line: {Line}", line);
+                Options.Logger?.LogDebug("Received line: {Line}", line);
 
                 if (!line.StartsWith("data: ")) continue;
 
@@ -256,18 +236,18 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
                 string? token = null;
                 try
                 {
-                    var streamResponse = JsonConvert.DeserializeObject<StreamResponse>(data, _jsonSettings);
+                    var streamResponse = JsonSerializer.Deserialize<StreamResponse>(data, Options.JsonSerializerOptions);
                     token = streamResponse?.Choices?.FirstOrDefault()?.Text;
                 }
                 catch (JsonException ex)
                 {
-                    _logger?.LogWarning(ex, "Failed to parse SSE message: {Message}", data);
+                    Options.Logger?.LogWarning(ex, "Failed to parse SSE message: {Message}", data);
                     continue;
                 }
 
                 if (!string.IsNullOrEmpty(token))
                 {
-                    _logger?.LogDebug("Yielding token: {Token}", token);
+                    Options.Logger?.LogDebug("Yielding token: {Token}", token);
                     yield return token;
                 }
             }
@@ -275,35 +255,17 @@ namespace SpongeEngine.LMStudioSharp.Providers.LmStudioSharpNative
 
         private class StreamResponse
         {
-            [JsonProperty("choices")]
+            [JsonPropertyName("choices")]
             public List<StreamChoice> Choices { get; set; } = new();
 
             public class StreamChoice
             {
-                [JsonProperty("text")]
+                [JsonPropertyName("text")]
                 public string Text { get; set; } = string.Empty;
 
-                [JsonProperty("finish_reason")]
+                [JsonPropertyName("finish_reason")]
                 public string? FinishReason { get; set; }
             }
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    // Don't dispose the HttpClient as it was injected
-                }
-                _disposed = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }

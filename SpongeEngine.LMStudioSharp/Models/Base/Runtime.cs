@@ -1,16 +1,16 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SpongeEngine.LMStudioSharp.Models.Base
 {
     public class Runtime
     {
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
     
-        [JsonProperty("version")]
+        [JsonPropertyName("version")]
         public string Version { get; set; } = string.Empty;
     
-        [JsonProperty("supported_formats")]
+        [JsonPropertyName("supported_formats")]
         public List<string> SupportedFormats { get; set; } = new();
     }
 }

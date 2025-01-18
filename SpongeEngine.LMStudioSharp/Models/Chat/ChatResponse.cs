@@ -1,35 +1,35 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 using SpongeEngine.LMStudioSharp.Models.Base;
 
 namespace SpongeEngine.LMStudioSharp.Models.Chat
 {
     public class ChatResponse
     {
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; } = string.Empty;
     
-        [JsonProperty("object")]
+        [JsonPropertyName("object")]
         public string Object { get; set; } = "chat.completion";
     
-        [JsonProperty("created")]
+        [JsonPropertyName("created")]
         public long Created { get; set; }
     
-        [JsonProperty("model")]
+        [JsonPropertyName("model")]
         public string Model { get; set; } = string.Empty;
     
-        [JsonProperty("choices")]
+        [JsonPropertyName("choices")]
         public List<Choice> Choices { get; set; } = new();
     
-        [JsonProperty("usage")]
+        [JsonPropertyName("usage")]
         public Usage Usage { get; set; } = new();
     
-        [JsonProperty("stats")]
+        [JsonPropertyName("stats")]
         public Stats Stats { get; set; } = new();
     
-        [JsonProperty("model_info")]
+        [JsonPropertyName("model_info")]
         public ModelInfo ModelInfo { get; set; } = new();
     
-        [JsonProperty("runtime")]
+        [JsonPropertyName("runtime")]
         public Runtime Runtime { get; set; } = new();
     }
 }

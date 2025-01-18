@@ -1,13 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SpongeEngine.LMStudioSharp.Models.Embedding
 {
     public class EmbeddingRequest
     {
-        [JsonProperty("model")]
+        [JsonPropertyName("model")]
         public string Model { get; set; } = string.Empty;
     
-        [JsonProperty("input")]
+        [JsonPropertyName("input")]
         public string Input { get; set; } = string.Empty;
     }
 

@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Newtonsoft.Json;
-using SpongeEngine.LMStudioSharp.Client;
 using SpongeEngine.LMStudioSharp.Models.Base;
 using SpongeEngine.LMStudioSharp.Models.Chat;
 using SpongeEngine.LMStudioSharp.Models.Completion;
@@ -12,18 +11,15 @@ using WireMock.ResponseBuilders;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace SpongeEngine.LMStudioSharp.Tests.Unit.Client
+namespace SpongeEngine.LMStudioSharp.Tests.Unit
 {
     public class Tests : LmStudioTestBase
     {
-        private readonly LmStudioSharpClient _sharpClient;
+        public LmStudioSharpClient Client { get; }
 
         public Tests(ITestOutputHelper output) : base(output)
         {
-            _sharpClient = new LmStudioSharpClient(new Options
-            {
-                BaseUrl = BaseUrl
-            }, Logger);
+            Client = new LmStudioSharpClient(new LmStudioClientOptions());
         }
 
         [Fact]
@@ -58,7 +54,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit.Client
                     .WithBody(JsonConvert.SerializeObject(expectedResponse)));
 
             // Act
-            var response = await _sharpClient.ListModelsAsync();
+            var response = await Client.ListModelsAsync();
 
             // Assert
             response.Should().NotBeNull();
@@ -91,7 +87,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit.Client
                     .WithBody(JsonConvert.SerializeObject(expectedModel)));
 
             // Act
-            var model = await _sharpClient.GetModelAsync("test-model");
+            var model = await Client.GetModelAsync("test-model");
 
             // Assert
             model.Should().NotBeNull();
@@ -136,7 +132,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit.Client
                     .WithBody(JsonConvert.SerializeObject(expectedResponse)));
 
             // Act
-            var response = await _sharpClient.CompleteAsync(request);
+            var response = await Client.CompleteAsync(request);
 
             // Assert
             response.Should().NotBeNull();
@@ -184,7 +180,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit.Client
                     .WithBody(JsonConvert.SerializeObject(expectedResponse)));
 
             // Act
-            var response = await _sharpClient.ChatCompleteAsync(request);
+            var response = await Client.ChatCompleteAsync(request);
 
             // Assert
             response.Should().NotBeNull();
@@ -226,7 +222,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit.Client
                     .WithBody(JsonConvert.SerializeObject(expectedResponse)));
 
             // Act
-            var response = await _sharpClient.CreateEmbeddingAsync(request);
+            var response = await Client.CreateEmbeddingAsync(request);
 
             // Assert
             response.Should().NotBeNull();
@@ -261,7 +257,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit.Client
 
             // Act
             var receivedTokens = new List<string>();
-            await foreach (var token in _sharpClient.StreamCompletionAsync(request))
+            await foreach (var token in Client.StreamCompletionAsync(request))
             {
                 receivedTokens.Add(token);
             }
@@ -299,29 +295,13 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit.Client
 
             // Act
             var receivedTokens = new List<string>();
-            await foreach (var token in _sharpClient.StreamChatAsync(request))
+            await foreach (var token in Client.StreamChatAsync(request))
             {
                 receivedTokens.Add(token);
             }
 
             // Assert
             receivedTokens.Should().BeEquivalentTo(tokens);
-        }
-
-        [Fact]
-        public void UseNativeApi_WhenUsingOpenAiApi_ShouldThrow()
-        {
-            // Arrange
-            var client = new LmStudioSharpClient(new Options
-            {
-                BaseUrl = BaseUrl,
-                UseOpenAiApi = true
-            }, Logger);
-
-            // Act & Assert
-            var act = () => client.ListModelsAsync();
-            act.Should().ThrowAsync<InvalidOperationException>()
-                .WithMessage("Native API is not enabled. Set UseOpenAiApi to false in options.");
         }
     }
 }

@@ -1,13 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SpongeEngine.LMStudioSharp.Models.Chat
 {
     public class MessageResponse
     {
-        [JsonProperty("role")]
+        [JsonPropertyName("role")]
         public string Role { get; set; } = string.Empty;
 
-        [JsonProperty("content")]
+        [JsonPropertyName("content")]
         public string? Content { get; set; } = string.Empty;
     }
 }

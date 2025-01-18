@@ -1,19 +1,19 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SpongeEngine.LMStudioSharp.Models.Base
 {
     public class Stats 
     {
-        [JsonProperty("tokens_per_second")]
+        [JsonPropertyName("tokens_per_second")]
         public double TokensPerSecond { get; set; }
     
-        [JsonProperty("time_to_first_token")]
+        [JsonPropertyName("time_to_first_token")]
         public double TimeToFirstToken { get; set; }
     
-        [JsonProperty("generation_time")]
+        [JsonPropertyName("generation_time")]
         public double GenerationTime { get; set; }
     
-        [JsonProperty("stop_reason")]
+        [JsonPropertyName("stop_reason")]
         public string StopReason { get; set; } = string.Empty;
     }
 }

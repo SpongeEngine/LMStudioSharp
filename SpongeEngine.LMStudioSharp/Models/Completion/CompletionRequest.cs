@@ -1,28 +1,28 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace SpongeEngine.LMStudioSharp.Models.Completion
 {
     public class CompletionRequest
     {
-        [JsonProperty("model")]
+        [JsonPropertyName("model")]
         public string Model { get; set; } = string.Empty;
     
-        [JsonProperty("prompt")]
+        [JsonPropertyName("prompt")]
         public string Prompt { get; set; } = string.Empty;
     
-        [JsonProperty("max_tokens")]
+        [JsonPropertyName("max_tokens")]
         public int MaxTokens { get; set; } = -1;
     
-        [JsonProperty("temperature")]
+        [JsonPropertyName("temperature")]
         public float Temperature { get; set; } = 0.7f;
     
-        [JsonProperty("top_p")]
+        [JsonPropertyName("top_p")]
         public float TopP { get; set; } = 0.9f;
     
-        [JsonProperty("stream")]
+        [JsonPropertyName("stream")]
         public bool Stream { get; set; }
     
-        [JsonProperty("stop")]
+        [JsonPropertyName("stop")]
         public string[]? Stop { get; set; }
     }
 }

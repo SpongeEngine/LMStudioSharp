@@ -27,8 +27,4 @@
         <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
         <ProjectReference Include="..\SpongeEngine.LMStudioSharp\SpongeEngine.LMStudioSharp.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Integration\Providers\" />
-    </ItemGroup>
 </Project>
