@@ -10,40 +10,29 @@ namespace SpongeEngine.LMStudioSharp.Tests.Common
 {
     public abstract class LmStudioTestBase : IDisposable, IAsyncLifetime
     {
-        protected readonly LmStudioSharpClient Client;
         protected readonly ITestOutputHelper Output;
+        protected readonly LmStudioSharpClient Client;
         protected readonly WireMockServer Server;
-        protected readonly ILogger Logger;
-        protected readonly string BaseUrl;
-        protected bool ServerAvailable;
         protected Model? DefaultModel;
 
         protected LmStudioTestBase(ITestOutputHelper output)
         {
-            Server = WireMockServer.Start();
-            BaseUrl = Server.Urls[0];
-            Logger = LoggerFactory
-                .Create(builder => builder.AddXUnit(output))
-                .CreateLogger(GetType());
-            
-            
-            
             Output = output;
-            Logger = LoggerFactory
-                .Create(builder => builder.AddXUnit(output))
-                .CreateLogger(GetType());
-            
+            Server = WireMockServer.Start();
             Client = new LmStudioSharpClient(new LmStudioClientOptions()
             {
-                BaseUrl = BaseUrl,
-                HttpClient = new HttpClient 
-                { 
+                BaseUrl = Server.Urls[0],
+                HttpClient = new HttpClient
+                {
                     BaseAddress = new Uri(TestConfig.NativeApiBaseUrl),
                 },
                 JsonSerializerOptions = new JsonSerializerOptions()
                 {
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                }
+                },
+                Logger = LoggerFactory
+                    .Create(builder => builder.AddXUnit(output))
+                    .CreateLogger(GetType()),
             });
         }
 
@@ -56,33 +45,24 @@ namespace SpongeEngine.LMStudioSharp.Tests.Common
         {
             try
             {
-                ServerAvailable = await Client.IsAvailableAsync();
-                if (ServerAvailable)
-                {
-                    Output.WriteLine("LM Studio server is available");
+                Output.WriteLine("LM Studio server is available");
             
-                    ModelsResponse modelsResponse = await Client.ListModelsAsync();
-                    if (modelsResponse.Data.Any())
+                ModelsResponse modelsResponse = await Client.ListModelsAsync();
+                if (modelsResponse.Data.Any())
+                {
+                    DefaultModel = new Model 
                     {
-                        DefaultModel = new Model 
-                        {
-                            Id = modelsResponse.Data[0].Id,
-                            Object = modelsResponse.Data[0].Object,
-                            // Map other properties as needed
-                        };
-                        Output.WriteLine($"Found model: {DefaultModel.Id}");
-                    }
-                    else
-                    {
-                        Output.WriteLine($"modelsResponse: {JsonSerializer.Serialize(modelsResponse)}");
-                        Output.WriteLine("No models available");
-                        throw new SkipException("No models available in LM Studio");
-                    }
+                        Id = modelsResponse.Data[0].Id,
+                        Object = modelsResponse.Data[0].Object,
+                        // Map other properties as needed
+                    };
+                    Output.WriteLine($"Found model: {DefaultModel.Id}");
                 }
                 else
                 {
-                    Output.WriteLine("LM Studio server is not available");
-                    throw new SkipException("LM Studio server is not available");
+                    Output.WriteLine($"modelsResponse: {JsonSerializer.Serialize(modelsResponse)}");
+                    Output.WriteLine("No models available");
+                    throw new SkipException("No models available in LM Studio");
                 }
             }
             catch (Exception ex) when (ex is not SkipException)

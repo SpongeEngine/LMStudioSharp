@@ -11,14 +11,12 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration
     [Trait("API", "Native")]
     public class Tests : LmStudioTestBase
     {
-        public Tests(ITestOutputHelper output) : base(output) { }
+        public Tests(ITestOutputHelper output) : base(output) {}
 
         [SkippableFact]
         [Trait("Category", "Integration")]
         public async Task Complete_WithSimplePrompt_ShouldReturnResponse()
         {
-            Skip.If(!ServerAvailable, "LM Studio server is not available");
-
             // Arrange
             var request = new CompletionRequest
             {
@@ -42,8 +40,6 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration
         [Trait("Category", "Integration")]
         public async Task StreamCompletion_ShouldStreamTokens()
         {
-            Skip.If(!ServerAvailable, "LM Studio server is not available");
-
             var request = new CompletionRequest
             {
                 Model = "test-model",
@@ -89,8 +85,6 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration
         [Trait("Category", "Integration")]
         public async Task Complete_WithStopSequence_ShouldReturnResponse()
         {
-            Skip.If(!ServerAvailable, "LM Studio server is not available");
-
             // Arrange
             var request = new CompletionRequest
             {
@@ -115,8 +109,6 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration
         [Trait("Category", "Integration")]
         public async Task Complete_WithDifferentTemperatures_ShouldWork()
         {
-            Skip.If(!ServerAvailable, "LM Studio server is not available");
-
             // Test various temperature settings
             var temperatures = new[] { 0.1f, 0.7f, 1.5f };
             foreach (var temp in temperatures)
@@ -148,8 +140,6 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration
         [Trait("Category", "Integration")]
         public async Task ChatComplete_ShouldReturnResponse()
         {
-            Skip.If(!ServerAvailable, "LM Studio server is not available");
-
             // Arrange
             var request = new ChatRequest
             {

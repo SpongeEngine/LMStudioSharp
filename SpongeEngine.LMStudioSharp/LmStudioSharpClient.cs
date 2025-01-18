@@ -136,19 +136,6 @@ namespace SpongeEngine.LMStudioSharp
             }
         }
 
-        public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var response = await Options.HttpClient.GetAsync(MODELS_ENDPOINT, cancellationToken);
-                return response.IsSuccessStatusCode;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         private async Task<HttpResponseMessage> PostAsJsonAsync<T>(string endpoint, T content, CancellationToken cancellationToken)
         {
             var json = JsonSerializer.Serialize(content, Options.JsonSerializerOptions);

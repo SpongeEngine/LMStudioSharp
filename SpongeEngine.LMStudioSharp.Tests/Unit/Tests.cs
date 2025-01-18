@@ -15,12 +15,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
 {
     public class Tests : LmStudioTestBase
     {
-        public LmStudioSharpClient Client { get; }
-
-        public Tests(ITestOutputHelper output) : base(output)
-        {
-            Client = new LmStudioSharpClient(new LmStudioClientOptions());
-        }
+        public Tests(ITestOutputHelper output) : base(output) {}
 
         [Fact]
         public async Task ListModelsAsync_ShouldReturnModels()
