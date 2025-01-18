@@ -24,7 +24,8 @@ namespace SpongeEngine.LMStudioSharp.Tests.Common
                 BaseUrl = Server.Urls[0],
                 HttpClient = new HttpClient
                 {
-                    BaseAddress = new Uri(TestConfig.NativeApiBaseUrl),
+                    BaseAddress = new Uri(Server.Urls[0]),
+                    
                 },
                 JsonSerializerOptions = new JsonSerializerOptions()
                 {
