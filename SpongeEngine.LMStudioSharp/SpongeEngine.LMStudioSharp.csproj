@@ -8,13 +8,13 @@
         <!-- Package Info -->
         <PackageId>SpongeEngine.LMStudioSharp</PackageId>
         <Title>LMStudioSharp</Title>
-        <Version>1.2.0</Version>
+        <Version>0.3.8.1</Version>
         <Authors>Dan Clipca</Authors>
         <Company>Sponge Engine</Company>
-        <Description>A .NET client library for LMStudio, providing a simple and efficient way to interact with LMStudio's text generation capabilities in your .NET apps. Support for the native API LMStudio and its OpenAI-compatible endpoints. This library serves as the LM Studio integration layer for the LocalAI.NET ecosystem.</Description>
+        <Description>C# client for LM Studio native API.</Description>
 
         <!-- Package Details -->
-        <PackageTags>llm, ai, openai, localai, lm-studio, local-llm, offline-ai, self-hosted-ai, llama, gpt
+        <PackageTags>llm, ai, localai, lm-studio, local-llm, offline-ai, self-hosted-ai, gpt
         text-generation, completion, chat, dotnet, csharp, cross-platform</PackageTags>
         <PackageProjectUrl>https://github.com/SpongeEngine/LMStudioSharp</PackageProjectUrl>
         <RepositoryUrl>https://github.com/SpongeEngine/LMStudioSharp</RepositoryUrl>
