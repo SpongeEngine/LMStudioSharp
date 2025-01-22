@@ -35,7 +35,10 @@ using SpongeEngine.LMStudioSharp.Models.Chat;
 // Configure the client
 var options = new LmStudioClientOptions
 {
-    BaseUrl = "http://localhost:1234"
+    HttpClient = new HttpClient
+    {
+        BaseAddress = new Uri("http://localhost:1234")
+    }
 };
 
 // Create client instance
@@ -86,8 +89,10 @@ await foreach (var token in client.StreamCompletionAsync(completionRequest))
 ```csharp
 var options = new LmStudioClientOptions
 {
-    BaseUrl = "http://localhost:1234",    // LM Studio server URL
-    HttpClient = new HttpClient(),        // Optional custom HttpClient
+    HttpClient = new HttpClient
+    {
+        BaseAddress = new Uri("http://localhost:1234")
+    },                                    // Configure HttpClient with base address
     JsonSerializerOptions = new JsonSerializerOptions(), // Optional JSON options
     Logger = loggerInstance              // Optional ILogger instance
 };
@@ -140,7 +145,10 @@ var logger = LoggerFactory
 
 var options = new LmStudioClientOptions
 {
-    BaseUrl = "http://localhost:1234",
+    HttpClient = new HttpClient
+    {
+        BaseAddress = new Uri("http://localhost:1234")
+    },
     Logger = logger
 };
 var client = new LmStudioSharpClient(options);
@@ -157,7 +165,10 @@ var jsonOptions = new JsonSerializerOptions
 
 var options = new LmStudioClientOptions
 {
-    BaseUrl = "http://localhost:1234",
+    HttpClient = new HttpClient
+    {
+        BaseAddress = new Uri("http://localhost:1234")
+    },
     JsonSerializerOptions = jsonOptions
 };
 var client = new LmStudioSharpClient(options);
