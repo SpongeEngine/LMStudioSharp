@@ -23,7 +23,7 @@ jobs:
     - name: Get version from source
       id: get-version
       run: |
-        VERSION=$(cat SpongeEngine.LmStudioSharp/SpongeEngine.LmStudioSharp.csproj | grep '<Version>' | sed -E 's/.*<Version>(.*)<\/Version>.*/\1/')
+        VERSION=$(cat SpongeEngine.LMStudioSharp/SpongeEngine.LMStudioSharp.csproj | grep '<Version>' | sed -E 's/.*<Version>(.*)<\/Version>.*/\1/')
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "Using version: $VERSION"
 
