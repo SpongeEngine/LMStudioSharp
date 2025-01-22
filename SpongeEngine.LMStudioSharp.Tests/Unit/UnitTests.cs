@@ -1,11 +1,12 @@
-﻿using FluentAssertions;
-using Newtonsoft.Json;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using SpongeEngine.LMStudioSharp.Models.Base;
 using SpongeEngine.LMStudioSharp.Models.Chat;
 using SpongeEngine.LMStudioSharp.Models.Completion;
 using SpongeEngine.LMStudioSharp.Models.Embedding;
 using SpongeEngine.LMStudioSharp.Models.Model;
-using SpongeEngine.LMStudioSharp.Tests.Common;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using Xunit;
@@ -13,14 +14,30 @@ using Xunit.Abstractions;
 
 namespace SpongeEngine.LMStudioSharp.Tests.Unit
 {
-    public class Tests : LmStudioTestBase
+    public class UnitTests : UnitTestBase
     {
-        public Tests(ITestOutputHelper output) : base(output) {}
+        public UnitTests(ITestOutputHelper output) : base(output)
+        {
+            Client = new LmStudioSharpClient(new LmStudioClientOptions()
+            {
+                BaseUrl = Server.Urls[0],
+                HttpClient = new HttpClient
+                {
+                    BaseAddress = new Uri(Server.Urls[0]),
+                },
+                JsonSerializerOptions = new JsonSerializerOptions()
+                {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                },
+                Logger = LoggerFactory
+                    .Create(builder => builder.AddXUnit(output))
+                    .CreateLogger(GetType()),
+            });
+        }
 
         [Fact]
         public async Task ListModelsAsync_ShouldReturnModels()
         {
-            // Arrange
             var expectedResponse = new ModelsResponse
             {
                 Object = "list",
@@ -29,9 +46,10 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
                     new()
                     {
                         Id = "test-model",
+                        Object = "model",
                         Type = "llm",
                         Publisher = "test-publisher",
-                        Architecture = "test-arch",
+                        Architecture = "llama",
                         CompatibilityType = "gguf",
                         Quantization = "Q4_K_M",
                         State = "not-loaded",
@@ -42,16 +60,14 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/v1/models")
+                    .WithPath("/api/v0/models")
                     .UsingGet())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
-                    .WithBody(JsonConvert.SerializeObject(expectedResponse)));
+                    .WithBody(JsonSerializer.Serialize(expectedResponse)));
 
-            // Act
             var response = await Client.ListModelsAsync();
 
-            // Assert
             response.Should().NotBeNull();
             response.Data.Should().HaveCount(1);
             response.Data[0].Id.Should().Be("test-model");
@@ -60,13 +76,13 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
         [Fact]
         public async Task GetModelAsync_ShouldReturnModel()
         {
-            // Arrange
             var expectedModel = new Model
             {
                 Id = "test-model",
+                Object = "model",
                 Type = "llm",
                 Publisher = "test-publisher",
-                Architecture = "test-arch",
+                Architecture = "llama",
                 CompatibilityType = "gguf",
                 Quantization = "Q4_K_M",
                 State = "not-loaded",
@@ -75,16 +91,14 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/v1/models/test-model")
+                    .WithPath("/api/v0/models/test-model")
                     .UsingGet())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
-                    .WithBody(JsonConvert.SerializeObject(expectedModel)));
+                    .WithBody(JsonSerializer.Serialize(expectedModel)));
 
-            // Act
             var model = await Client.GetModelAsync("test-model");
 
-            // Assert
             model.Should().NotBeNull();
             model.Id.Should().Be("test-model");
         }
@@ -92,7 +106,6 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
         [Fact]
         public async Task CompleteAsync_WithNativeApi_ShouldReturn()
         {
-            // Arrange
             var request = new CompletionRequest
             {
                 Model = "test-model",
@@ -115,21 +128,21 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
                         Text = "Hello world!",
                         FinishReason = "stop"
                     }
-                }
+                },
+                Usage = new Usage { PromptTokens = 1, CompletionTokens = 2, TotalTokens = 3 },
+                Stats = new Stats { TokensPerSecond = 10, TimeToFirstToken = 0.1, GenerationTime = 0.2 }
             };
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/v1/completions")
+                    .WithPath("/api/v0/completions")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
-                    .WithBody(JsonConvert.SerializeObject(expectedResponse)));
+                    .WithBody(JsonSerializer.Serialize(expectedResponse)));
 
-            // Act
             var response = await Client.CompleteAsync(request);
 
-            // Assert
             response.Should().NotBeNull();
             response.Choices.Should().HaveCount(1);
             response.Choices[0].Text.Should().Be("Hello world!");
@@ -138,7 +151,6 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
         [Fact]
         public async Task ChatCompleteAsync_WithNativeApi_ShouldReturn()
         {
-            // Arrange
             var request = new ChatRequest
             {
                 Model = "test-model",
@@ -151,7 +163,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
 
             var expectedResponse = new ChatResponse
             {
-                Id = "chat-123",
+                Id = "chatcmpl-123",
                 Object = "chat.completion",
                 Created = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                 Model = "test-model",
@@ -160,33 +172,37 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
                     new()
                     {
                         Index = 0,
-                        Text = "Hello! How can I help you?",
+                        Message = new MessageResponse 
+                        { 
+                            Role = "assistant",
+                            Content = "Hello! How can I help you?"
+                        },
                         FinishReason = "stop"
                     }
-                }
+                },
+                Usage = new Usage { PromptTokens = 5, CompletionTokens = 7, TotalTokens = 12 },
+                Stats = new Stats { TokensPerSecond = 15, TimeToFirstToken = 0.1, GenerationTime = 0.3 }
             };
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/v1/chat/completions")
+                    .WithPath("/api/v0/chat/completions")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
-                    .WithBody(JsonConvert.SerializeObject(expectedResponse)));
+                    .WithBody(JsonSerializer.Serialize(expectedResponse)));
 
-            // Act
             var response = await Client.ChatCompleteAsync(request);
 
-            // Assert
             response.Should().NotBeNull();
             response.Choices.Should().HaveCount(1);
-            response.Choices[0].Text.Should().Be("Hello! How can I help you?");
+            response.Choices[0].Message.Should().NotBeNull();
+            response.Choices[0].Message!.Content.Should().Be("Hello! How can I help you?");
         }
 
         [Fact]
         public async Task CreateEmbeddingAsync_WithNativeApi_ShouldReturn()
         {
-            // Arrange
             var request = new EmbeddingRequest
             {
                 Model = "text-embedding-model",
@@ -205,21 +221,20 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
                         Embedding = new[] { 0.1f, 0.2f, 0.3f },
                         Index = 0
                     }
-                }
+                },
+                Usage = new Usage { PromptTokens = 2, TotalTokens = 2 }
             };
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/v1/embeddings")
+                    .WithPath("/api/v0/embeddings")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
-                    .WithBody(JsonConvert.SerializeObject(expectedResponse)));
+                    .WithBody(JsonSerializer.Serialize(expectedResponse)));
 
-            // Act
             var response = await Client.CreateEmbeddingAsync(request);
 
-            // Assert
             response.Should().NotBeNull();
             response.Data.Should().HaveCount(1);
             response.Data[0].Embedding.Should().BeEquivalentTo(new[] { 0.1f, 0.2f, 0.3f });
@@ -228,7 +243,6 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
         [Fact]
         public async Task StreamCompletionAsync_WithNativeApi_ShouldStreamTokens()
         {
-            // Arrange
             var request = new CompletionRequest
             {
                 Model = "test-model",
@@ -243,28 +257,25 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/v1/completions")
+                    .WithPath("/api/v0/completions")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
                     .WithBody(string.Join("", streamResponses) + "data: [DONE]\n\n")
                     .WithHeader("Content-Type", "text/event-stream"));
 
-            // Act
             var receivedTokens = new List<string>();
             await foreach (var token in Client.StreamCompletionAsync(request))
             {
                 receivedTokens.Add(token);
             }
 
-            // Assert
             receivedTokens.Should().BeEquivalentTo(tokens);
         }
 
         [Fact]
         public async Task StreamChatAsync_WithNativeApi_ShouldStreamTokens()
         {
-            // Arrange
             var request = new ChatRequest
             {
                 Model = "test-model",
@@ -281,21 +292,19 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
 
             Server
                 .Given(Request.Create()
-                    .WithPath("/v1/chat/completions")
+                    .WithPath("/api/v0/chat/completions")
                     .UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(200)
                     .WithBody(string.Join("", streamResponses) + "data: [DONE]\n\n")
                     .WithHeader("Content-Type", "text/event-stream"));
 
-            // Act
             var receivedTokens = new List<string>();
             await foreach (var token in Client.StreamChatAsync(request))
             {
                 receivedTokens.Add(token);
             }
 
-            // Assert
             receivedTokens.Should().BeEquivalentTo(tokens);
         }
     }

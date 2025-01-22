@@ -17,9 +17,10 @@ namespace SpongeEngine.LMStudioSharp
     {
         public override LmStudioClientOptions Options { get; }
         
-        private const string BASE_PATH = $"/v1";
+        private const string API_VERSION = "v0";
+        private const string BASE_PATH = $"/api/{API_VERSION}";
         private const string MODELS_ENDPOINT = $"{BASE_PATH}/models";
-        private const string CHAT_ENDPOINT = $"{BASE_PATH}/chat/completions"; 
+        private const string CHAT_ENDPOINT = $"{BASE_PATH}/chat/completions";
         private const string COMPLETIONS_ENDPOINT = $"{BASE_PATH}/completions";
         private const string EMBEDDINGS_ENDPOINT = $"{BASE_PATH}/embeddings";
 

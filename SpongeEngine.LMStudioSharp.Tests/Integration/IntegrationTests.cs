@@ -1,4 +1,7 @@
-﻿using FluentAssertions;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using SpongeEngine.LMStudioSharp.Models.Chat;
 using SpongeEngine.LMStudioSharp.Models.Completion;
 using SpongeEngine.LMStudioSharp.Tests.Common;
@@ -9,9 +12,26 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration
 {
     [Trait("Category", "Integration")]
     [Trait("API", "Native")]
-    public class Tests : LmStudioTestBase
+    public class IntegrationTests : LmStudioTestBase
     {
-        public Tests(ITestOutputHelper output) : base(output) {}
+        public IntegrationTests(ITestOutputHelper output) : base(output)
+        {
+            Client = new LmStudioSharpClient(new LmStudioClientOptions()
+            {
+                BaseUrl = TestConfig.NativeApiBaseUrl,
+                HttpClient = new HttpClient
+                {
+                    BaseAddress = new Uri(TestConfig.NativeApiBaseUrl),
+                },
+                JsonSerializerOptions = new JsonSerializerOptions()
+                {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                },
+                Logger = LoggerFactory
+                    .Create(builder => builder.AddXUnit(output))
+                    .CreateLogger(GetType()),
+            });
+        }
 
         [SkippableFact]
         [Trait("Category", "Integration")]
@@ -143,7 +163,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration
             // Arrange
             var request = new ChatRequest
             {
-                Model = DefaultModel.Id,  // Make sure to use the actual model ID
+                //Model = DefaultModel.Id,  // Make sure to use the actual model ID
                 Messages = new List<ChatMessage>
                 {
                     new() { Role = "system", Content = "Always answer in rhymes." },
