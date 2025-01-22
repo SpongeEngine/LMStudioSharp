@@ -4,11 +4,10 @@
 [![License](https://img.shields.io/github/license/SpongeEngine/LMStudioSharp)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-6.0%20%7C%207.0%20%7C%208.0%2B-512BD4)](https://dotnet.microsoft.com/download)
 
-C# client for interacting with LM Studio through its native and OpenAI-compatible endpoints.
+C# client for interacting with LM Studio through its native API.
 
 ## Features
 - Complete support for LM Studio's native API
-- OpenAI-compatible API endpoint support
 - Text completion and chat completion
 - Streaming support for both completion types
 - Text embeddings generation
@@ -28,18 +27,15 @@ dotnet add package SpongeEngine.LMStudioSharp
 
 ## Quick Start
 
-### Using Native API
 ```csharp
-using SpongeEngine.LMStudioSharp.Client;
-using SpongeEngine.LMStudioSharp.Models.Base;
+using SpongeEngine.LMStudioSharp;
 using SpongeEngine.LMStudioSharp.Models.Completion;
 using SpongeEngine.LMStudioSharp.Models.Chat;
 
 // Configure the client
-var options = new Options
+var options = new LmStudioClientOptions
 {
-    BaseUrl = "http://localhost:1234",
-    TimeoutSeconds = 600
+    BaseUrl = "http://localhost:1234"
 };
 
 // Create client instance
@@ -60,7 +56,7 @@ var completionRequest = new CompletionRequest
 };
 
 var completionResponse = await client.CompleteAsync(completionRequest);
-Console.WriteLine(completionResponse.Choices[0].Text);
+Console.WriteLine(completionResponse.Choices[0].GetText());
 
 // Chat completion
 var chatRequest = new ChatRequest
@@ -75,7 +71,7 @@ var chatRequest = new ChatRequest
 };
 
 var chatResponse = await client.ChatCompleteAsync(chatRequest);
-Console.WriteLine(chatResponse.Choices[0].Message.Content);
+Console.WriteLine(chatResponse.Choices[0].GetText());
 
 // Stream completion
 await foreach (var token in client.StreamCompletionAsync(completionRequest))
@@ -84,45 +80,16 @@ await foreach (var token in client.StreamCompletionAsync(completionRequest))
 }
 ```
 
-### Using OpenAI-Compatible API
-```csharp
-var options = new Options
-{
-    BaseUrl = "http://localhost:1234",
-    UseOpenAiApi = true
-};
-
-using var client = new LmStudioSharpClient(options);
-
-// Simple completion
-string response = await client.CompleteWithOpenAiAsync(
-    "Write a short story about:",
-    new CompletionOptions
-    {
-        MaxTokens = 200,
-        Temperature = 0.7f
-    });
-
-// Stream completion
-await foreach (var token in client.StreamCompletionWithOpenAiAsync(
-    "Once upon a time...",
-    new CompletionOptions { MaxTokens = 200 }))
-{
-    Console.Write(token);
-}
-```
-
 ## Configuration Options
 
-### Basic Options
+### Client Options
 ```csharp
-var options = new Options
+var options = new LmStudioClientOptions
 {
     BaseUrl = "http://localhost:1234",    // LM Studio server URL
-    ApiVersion = "v1",                    // API version
-    ApiKey = "optional_api_key",          // Optional API key
-    TimeoutSeconds = 600,                 // Request timeout
-    UseOpenAiApi = false                  // Use OpenAI-compatible API
+    HttpClient = new HttpClient(),        // Optional custom HttpClient
+    JsonSerializerOptions = new JsonSerializerOptions(), // Optional JSON options
+    Logger = loggerInstance              // Optional ILogger instance
 };
 ```
 
@@ -134,7 +101,7 @@ var request = new CompletionRequest
     Prompt = "Your prompt here",
     MaxTokens = 200,                      // Maximum tokens to generate
     Temperature = 0.7f,                   // Randomness (0.0-1.0)
-    TopP = 0.9f,                          // Nucleus sampling threshold
+    TopP = 0.9f,                         // Nucleus sampling threshold
     Stop = new[] { "\n" },               // Stop sequences
     Stream = false                        // Enable streaming
 };
@@ -146,18 +113,14 @@ try
 {
     var response = await client.CompleteAsync(request);
 }
-catch (SpongeEngine.LMStudioSharp.Models.Exception ex)
+catch (LlmSharpException ex)
 {
     Console.WriteLine($"LM Studio error: {ex.Message}");
-    Console.WriteLine($"Provider: {ex.Provider}");
     if (ex.StatusCode.HasValue)
     {
         Console.WriteLine($"Status code: {ex.StatusCode}");
     }
-    if (ex.ResponseContent != null)
-    {
-        Console.WriteLine($"Response content: {ex.ResponseContent}");
-    }
+    Console.WriteLine($"Response content: {ex.ResponseContent}");
 }
 catch (Exception ex)
 {
@@ -169,26 +132,35 @@ catch (Exception ex)
 The client supports Microsoft.Extensions.Logging:
 
 ```csharp
-ILogger logger = LoggerFactory
+var logger = LoggerFactory
     .Create(builder => builder
         .AddConsole()
         .SetMinimumLevel(LogLevel.Debug))
     .CreateLogger<LmStudioSharpClient>();
 
-var client = new LmStudioSharpClient(options, logger);
+var options = new LmStudioClientOptions
+{
+    BaseUrl = "http://localhost:1234",
+    Logger = logger
+};
+var client = new LmStudioSharpClient(options);
 ```
 
 ## JSON Serialization
-Custom JSON settings can be provided:
+Custom JSON options can be provided:
 
 ```csharp
-var jsonSettings = new JsonSerializerSettings
+var jsonOptions = new JsonSerializerOptions
 {
-    NullValueHandling = NullValueHandling.Ignore,
-    DefaultValueHandling = DefaultValueHandling.Ignore
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
 };
 
-var client = new LmStudioSharpClient(options, logger: null, jsonSettings: jsonSettings);
+var options = new LmStudioClientOptions
+{
+    BaseUrl = "http://localhost:1234",
+    JsonSerializerOptions = jsonOptions
+};
+var client = new LmStudioSharpClient(options);
 ```
 
 ## Testing
@@ -200,10 +172,9 @@ dotnet test
 ```
 
 To configure the test environment:
-```csharp
-// Set environment variables for testing
-Environment.SetEnvironmentVariable("LMSTUDIO_BASE_URL", "http://localhost:1234");
-Environment.SetEnvironmentVariable("LMSTUDIO_OPENAI_BASE_URL", "http://localhost:1234/v1");
+```bash
+# Set environment variables for testing
+export LMSTUDIO_BASE_URL="http://localhost:1234"
 ```
 
 ## License
