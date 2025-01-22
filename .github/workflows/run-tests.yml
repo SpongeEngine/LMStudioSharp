@@ -1,10 +1,11 @@
-name: Tests
+name: Run Tests
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch: # Enables the "Run workflow" button
 
 jobs:
   test:
@@ -27,5 +28,5 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
       
-    - name: Test (Unit Only)
+    - name: Test
       run: dotnet test --no-build --verbosity normal --filter "Category!=Integration"
