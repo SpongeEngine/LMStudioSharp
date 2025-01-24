@@ -6,14 +6,19 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using SpongeEngine.LLMSharp.Core;
 using SpongeEngine.LLMSharp.Core.Exceptions;
-using SpongeEngine.LMStudioSharp.Models.Chat;
+using SpongeEngine.LLMSharp.Core.Interfaces;
+using SpongeEngine.LLMSharp.Core.Models;
 using SpongeEngine.LMStudioSharp.Models.Completion;
-using SpongeEngine.LMStudioSharp.Models.Embedding;
 using SpongeEngine.LMStudioSharp.Models.Model;
+using ChatRequest = SpongeEngine.LMStudioSharp.Models.Chat.ChatRequest;
+using ChatResponse = SpongeEngine.LMStudioSharp.Models.Chat.ChatResponse;
+using CompletionRequest = SpongeEngine.LMStudioSharp.Models.Completion.CompletionRequest;
+using EmbeddingRequest = SpongeEngine.LMStudioSharp.Models.Embedding.EmbeddingRequest;
+using EmbeddingResponse = SpongeEngine.LMStudioSharp.Models.Embedding.EmbeddingResponse;
 
 namespace SpongeEngine.LMStudioSharp
 {
-    public class LmStudioSharpClient : LlmClientBase
+    public class LmStudioSharpClient : LlmClientBase, ICompletionService
     {
         public override LmStudioClientOptions Options { get; }
         
@@ -253,6 +258,112 @@ namespace SpongeEngine.LMStudioSharp
 
                 [JsonPropertyName("finish_reason")]
                 public string? FinishReason { get; set; }
+            }
+        }
+
+        public async Task<CompletionResult> CompleteAsync(
+            LLMSharp.Core.Models.CompletionRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            // Convert LLMSharp Core request to LMStudio request
+            var lmStudioRequest = new Models.Completion.CompletionRequest
+            {
+                Model = request.ModelId,
+                Prompt = request.Prompt,
+                MaxTokens = request.MaxTokens ?? -1,
+                Temperature = request.Temperature,
+                TopP = request.TopP,
+                Stop = request.StopSequences.Count > 0 ? request.StopSequences.ToArray() : null,
+                Stream = false
+            };
+
+            // Apply any additional provider-specific parameters
+            foreach (var param in request.ProviderParameters)
+            {
+                Options.Logger?.LogDebug("Additional provider parameter: {Key}={Value}", param.Key, param.Value);
+            }
+
+            // Call LMStudio API and measure time
+            var startTime = DateTime.UtcNow;
+            var response = await CompleteAsync(lmStudioRequest, cancellationToken);
+            var generationTime = DateTime.UtcNow - startTime;
+
+            // Extract the completion text from the first choice
+            var completionText = response.Choices.FirstOrDefault()?.GetText() ?? string.Empty;
+
+            // Convert LMStudio response to LLMSharp Core response
+            return new CompletionResult
+            {
+                Text = completionText,
+                ModelId = response.Model,
+                TokenUsage = new CompletionTokenUsage
+                {
+                    PromptTokens = response.Usage.PromptTokens,
+                    CompletionTokens = response.Usage.CompletionTokens ?? 0,
+                    TotalTokens = response.Usage.TotalTokens
+                },
+                FinishReason = response.Choices.FirstOrDefault()?.FinishReason,
+                GenerationTime = generationTime,
+                Metadata = new Dictionary<string, object>
+                {
+                    ["provider"] = "LMStudio",
+                    ["tokensPerSecond"] = response.Stats.TokensPerSecond,
+                    ["timeToFirstToken"] = response.Stats.TimeToFirstToken,
+                    ["architecture"] = response.ModelInfo.Architecture,
+                    ["quantization"] = response.ModelInfo.Quantization,
+                    ["format"] = response.ModelInfo.Format,
+                    ["contextLength"] = response.ModelInfo.ContextLength,
+                    ["runtime"] = response.Runtime.Name,
+                    ["runtimeVersion"] = response.Runtime.Version
+                }
+            };
+        }
+        
+        public async IAsyncEnumerable<CompletionToken> StreamCompletionAsync(
+            LLMSharp.Core.Models.CompletionRequest request,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            // Convert LLMSharp Core request to LMStudio request
+            var lmStudioRequest = new Models.Completion.CompletionRequest
+            {
+                Model = request.ModelId,
+                Prompt = request.Prompt,
+                MaxTokens = request.MaxTokens ?? -1,
+                Temperature = request.Temperature,
+                TopP = request.TopP,
+                Stop = request.StopSequences.Count > 0 ? request.StopSequences.ToArray() : null,
+                Stream = true
+            };
+
+            // Apply any additional provider-specific parameters
+            foreach (var param in request.ProviderParameters)
+            {
+                Options.Logger?.LogDebug("Additional provider parameter: {Key}={Value}", param.Key, param.Value);
+            }
+
+            // Stream responses from LMStudio API and track tokens
+            var totalTokens = 0;
+            var lastChoice = new StreamResponse.StreamChoice();
+
+            await foreach (var token in StreamCompletionAsync(lmStudioRequest, cancellationToken))
+            {
+                // Estimate token count - in practice you'd want to use a proper tokenizer here
+                // This is a rough approximation based on whitespace
+                var tokenCount = token.Split(new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries).Length;
+                totalTokens += tokenCount;
+
+                yield return new CompletionToken
+                {
+                    Text = token,
+                    TokenCount = totalTokens,
+                    FinishReason = lastChoice.FinishReason
+                };
+        
+                // Store last choice to get finish reason
+                if (lastChoice.FinishReason != null)
+                {
+                    break;
+                }
             }
         }
     }
