@@ -18,7 +18,6 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration
         {
             Client = new LmStudioSharpClient(new LmStudioClientOptions()
             {
-                BaseUrl = TestConfig.NativeApiBaseUrl,
                 HttpClient = new HttpClient
                 {
                     BaseAddress = new Uri(TestConfig.NativeApiBaseUrl),

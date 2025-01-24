@@ -20,7 +20,6 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
         {
             Client = new LmStudioSharpClient(new LmStudioClientOptions()
             {
-                BaseUrl = Server.Urls[0],
                 HttpClient = new HttpClient
                 {
                     BaseAddress = new Uri(Server.Urls[0]),
