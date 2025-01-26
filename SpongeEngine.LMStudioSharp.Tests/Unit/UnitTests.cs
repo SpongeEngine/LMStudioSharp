@@ -18,7 +18,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
     {
         public UnitTests(ITestOutputHelper output) : base(output)
         {
-            Client = new LmStudioSharpClient(new LmStudioClientOptions()
+            Client = new LMStudioSharpClient(new LMStudioClientOptions()
             {
                 HttpClient = new HttpClient
                 {

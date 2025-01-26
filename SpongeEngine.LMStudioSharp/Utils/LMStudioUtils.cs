@@ -6,7 +6,7 @@ using Exception = SpongeEngine.LMStudioSharp.Models.Exception;
 
 namespace SpongeEngine.LMStudioSharp.Utils
 {
-    public static class LmStudioUtils
+    public static class LMStudioUtils
     {
         /// <summary>
         /// Creates a default completion request with common settings

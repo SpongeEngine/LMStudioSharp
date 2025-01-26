@@ -16,7 +16,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration
     {
         public IntegrationTests(ITestOutputHelper output) : base(output)
         {
-            Client = new LmStudioSharpClient(new LmStudioClientOptions()
+            Client = new LMStudioSharpClient(new LMStudioClientOptions()
             {
                 HttpClient = new HttpClient
                 {

@@ -9,7 +9,7 @@ namespace SpongeEngine.LMStudioSharp.Tests.Common
     public abstract class LmStudioTestBase : IDisposable
     {
         protected readonly ITestOutputHelper Output;
-        protected LmStudioSharpClient Client { get; init; } = null!;
+        protected LMStudioSharpClient Client { get; init; } = null!;
         protected Model? DefaultModel { get; set; }
 
         protected LmStudioTestBase(ITestOutputHelper output)

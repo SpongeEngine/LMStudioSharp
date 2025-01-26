@@ -4,12 +4,12 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
-using SpongeEngine.LLMSharp.Core;
-using SpongeEngine.LLMSharp.Core.Exceptions;
-using SpongeEngine.LLMSharp.Core.Interfaces;
-using SpongeEngine.LLMSharp.Core.Models;
 using SpongeEngine.LMStudioSharp.Models.Completion;
 using SpongeEngine.LMStudioSharp.Models.Model;
+using SpongeEngine.SpongeLLM.Core;
+using SpongeEngine.SpongeLLM.Core.Exceptions;
+using SpongeEngine.SpongeLLM.Core.Interfaces;
+using SpongeEngine.SpongeLLM.Core.Models;
 using ChatRequest = SpongeEngine.LMStudioSharp.Models.Chat.ChatRequest;
 using ChatResponse = SpongeEngine.LMStudioSharp.Models.Chat.ChatResponse;
 using CompletionRequest = SpongeEngine.LMStudioSharp.Models.Completion.CompletionRequest;
@@ -18,9 +18,9 @@ using EmbeddingResponse = SpongeEngine.LMStudioSharp.Models.Embedding.EmbeddingR
 
 namespace SpongeEngine.LMStudioSharp
 {
-    public class LmStudioSharpClient : LlmClientBase, ICompletionService
+    public class LMStudioSharpClient : LLMClientBase, ITextCompletion, IStreamableTextCompletion
     {
-        public override LmStudioClientOptions Options { get; }
+        public override LMStudioClientOptions Options { get; }
         
         private const string API_VERSION = "v0";
         private const string BASE_PATH = $"/api/{API_VERSION}";
@@ -29,7 +29,7 @@ namespace SpongeEngine.LMStudioSharp
         private const string COMPLETIONS_ENDPOINT = $"{BASE_PATH}/completions";
         private const string EMBEDDINGS_ENDPOINT = $"{BASE_PATH}/embeddings";
 
-        public LmStudioSharpClient(LmStudioClientOptions options) : base(options)
+        public LMStudioSharpClient(LMStudioClientOptions options) : base(options)
         {
             Options = options;
         }
@@ -260,10 +260,8 @@ namespace SpongeEngine.LMStudioSharp
                 public string? FinishReason { get; set; }
             }
         }
-
-        public async Task<CompletionResult> CompleteAsync(
-            LLMSharp.Core.Models.CompletionRequest request,
-            CancellationToken cancellationToken = default)
+        
+        public async Task<TextCompletionResult> CompleteTextAsync(TextCompletionRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             // Convert LLMSharp Core request to LMStudio request
             var lmStudioRequest = new Models.Completion.CompletionRequest
@@ -292,11 +290,11 @@ namespace SpongeEngine.LMStudioSharp
             var completionText = response.Choices.FirstOrDefault()?.GetText() ?? string.Empty;
 
             // Convert LMStudio response to LLMSharp Core response
-            return new CompletionResult
+            return new TextCompletionResult
             {
                 Text = completionText,
                 ModelId = response.Model,
-                TokenUsage = new CompletionTokenUsage
+                TokenUsage = new TextCompletionTokenUsage
                 {
                     PromptTokens = response.Usage.PromptTokens,
                     CompletionTokens = response.Usage.CompletionTokens ?? 0,
@@ -318,10 +316,8 @@ namespace SpongeEngine.LMStudioSharp
                 }
             };
         }
-        
-        public async IAsyncEnumerable<CompletionToken> StreamCompletionAsync(
-            LLMSharp.Core.Models.CompletionRequest request,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+
+        public async IAsyncEnumerable<TextCompletionToken> CompleteTextStreamAsync(TextCompletionRequest request, CancellationToken cancellationToken = new CancellationToken())
         {
             // Convert LLMSharp Core request to LMStudio request
             var lmStudioRequest = new Models.Completion.CompletionRequest
@@ -352,7 +348,7 @@ namespace SpongeEngine.LMStudioSharp
                 var tokenCount = token.Split(new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries).Length;
                 totalTokens += tokenCount;
 
-                yield return new CompletionToken
+                yield return new TextCompletionToken
                 {
                     Text = token,
                     TokenCount = totalTokens,
