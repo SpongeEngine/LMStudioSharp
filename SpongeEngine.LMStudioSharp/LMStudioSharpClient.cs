@@ -4,10 +4,10 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using SpongeEngine.LLMSharp.Core.Exceptions;
 using SpongeEngine.LMStudioSharp.Models.Completion;
 using SpongeEngine.LMStudioSharp.Models.Model;
 using SpongeEngine.SpongeLLM.Core;
-using SpongeEngine.SpongeLLM.Core.Exceptions;
 using SpongeEngine.SpongeLLM.Core.Interfaces;
 using SpongeEngine.SpongeLLM.Core.Models;
 using ChatRequest = SpongeEngine.LMStudioSharp.Models.Chat.ChatRequest;
@@ -156,7 +156,7 @@ namespace SpongeEngine.LMStudioSharp
                 var content = await response.Content.ReadAsStringAsync();
                 Options.Logger?.LogError("Response error: Status={Status}, Content={Content}", response.StatusCode, content);
                 
-                throw new LlmSharpException(
+                throw new SpongeLLMException(
                     errorMessage,
                     (int)response.StatusCode,
                     content);
@@ -171,7 +171,7 @@ namespace SpongeEngine.LMStudioSharp
                 var result = JsonSerializer.Deserialize<T>(content, Options.JsonSerializerOptions);
                 if (result == null)
                 {
-                    throw new LlmSharpException(
+                    throw new SpongeLLMException(
                         "Null response after deserialization",
                         null,
                         content);
@@ -181,7 +181,7 @@ namespace SpongeEngine.LMStudioSharp
             catch (JsonException ex)
             {
                 Options.Logger?.LogError(ex, "Failed to deserialize response: {Content}", content);
-                throw new LlmSharpException(
+                throw new SpongeLLMException(
                     "Failed to deserialize response",
                     null,
                     $"Content: {content}, Error: {ex.Message}");
