@@ -33,6 +33,48 @@ namespace SpongeEngine.LMStudioSharp.Tests.Unit
                     .CreateLogger(GetType()),
             });
         }
+        
+        [Fact]
+        public async Task StreamChatAsync_WithDeltaProperty_ShouldStreamTokens_Unit()
+        {
+            // Arrange: Create a chat request with streaming enabled.
+            var request = new ChatRequest
+            {
+                Model = "test-model",
+                Messages = new List<ChatMessage>
+                {
+                    new() { Role = "user", Content = "Hello" }
+                },
+                Temperature = 0.7f,
+                Stream = true
+            };
+
+            // Define the tokens that should be returned by the stream.
+            var tokens = new[] { "Hello", " there", "!" };
+
+            // Create simulated SSE responses using the "delta" property.
+            var streamResponses = tokens.Select(token => $"data: {{\"choices\": [{{\"delta\": {{\"content\": \"{token}\"}}}}]}}\n\n");
+
+            // Configure WireMock to simulate the chat completions endpoint with delta-based tokens.
+            Server
+                .Given(Request.Create()
+                    .WithPath("/api/v0/chat/completions")
+                    .UsingPost())
+                .RespondWith(Response.Create()
+                    .WithStatusCode(200)
+                    .WithBody(string.Join("", streamResponses) + "data: [DONE]\n\n")
+                    .WithHeader("Content-Type", "text/event-stream"));
+
+            // Act: Consume the streaming response.
+            var receivedTokens = new List<string>();
+            await foreach (var token in Client.StreamChatAsync(request))
+            {
+                receivedTokens.Add(token);
+            }
+
+            // Assert: Verify that the tokens received match the expected tokens.
+            receivedTokens.Should().BeEquivalentTo(tokens);
+        }
 
         [Fact]
         public async Task ListModelsAsync_ShouldReturnModels()

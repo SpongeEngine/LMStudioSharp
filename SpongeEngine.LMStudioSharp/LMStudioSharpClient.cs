@@ -230,7 +230,8 @@ namespace SpongeEngine.LMStudioSharp
                 try
                 {
                     var streamResponse = JsonSerializer.Deserialize<StreamResponse>(data, Options.JsonSerializerOptions);
-                    token = streamResponse?.Choices?.FirstOrDefault()?.Text;
+                    var choice = streamResponse?.Choices?.FirstOrDefault();
+                    token = choice?.Text ?? choice?.Delta?.Content;
                 }
                 catch (JsonException ex)
                 {
@@ -253,11 +254,22 @@ namespace SpongeEngine.LMStudioSharp
 
             public class StreamChoice
             {
+                // For plain text completions:
                 [JsonPropertyName("text")]
-                public string Text { get; set; } = string.Empty;
+                public string? Text { get; set; }
+        
+                // For chat completions:
+                [JsonPropertyName("delta")]
+                public Delta? Delta { get; set; }
 
                 [JsonPropertyName("finish_reason")]
                 public string? FinishReason { get; set; }
+            }
+
+            public class Delta
+            {
+                [JsonPropertyName("content")]
+                public string? Content { get; set; }
             }
         }
         

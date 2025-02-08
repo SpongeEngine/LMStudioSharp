@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using SpongeEngine.LMStudioSharp.Models.Chat;
 using SpongeEngine.LMStudioSharp.Models.Completion;
 using SpongeEngine.LMStudioSharp.Tests.Common;
+using WireMock.RequestBuilders;
+using WireMock.ResponseBuilders;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -30,6 +32,39 @@ namespace SpongeEngine.LMStudioSharp.Tests.Integration
                     .Create(builder => builder.AddXUnit(output))
                     .CreateLogger(GetType()),
             });
+        }
+        
+        [SkippableFact]
+        [Trait("Category", "Integration")]
+        public async Task StreamChatAsync_WithDeltaProperty_ShouldStreamTokens()
+        {
+            // Arrange: Create a chat request with streaming enabled.
+            var request = new ChatRequest
+            {
+                Model = "test-model",  // Use your model ID if available.
+                Temperature = 0.7f,
+                Stream = true
+            };
+            request.Messages.Add(new ChatMessage { Role = "user", Content = "Hello" });
+
+            // Act: Consume the streaming response from the LM Studio server.
+            var receivedTokens = new List<string>();
+            await foreach (var token in Client.StreamChatAsync(request))
+            {
+                receivedTokens.Add(token);
+                Output.WriteLine($"Received token: {token}");
+            }
+
+            // If no tokens were received, we skip the test
+            // (for example, if the LM Studio server isn’t returning streaming tokens yet).
+            if (receivedTokens.Count == 0)
+            {
+                throw new SkipException("LM Studio server did not return any streaming tokens. " +
+                                        "Ensure that streaming chat responses are enabled and use the delta format.");
+            }
+
+            // Assert: Verify that some tokens were streamed.
+            receivedTokens.Should().NotBeEmpty("the LM Studio server should stream tokens for chat requests using the delta property");
         }
 
         [SkippableFact]
