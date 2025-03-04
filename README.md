@@ -33,7 +33,7 @@ using SpongeEngine.LMStudioSharp.Models.Completion;
 using SpongeEngine.LMStudioSharp.Models.Chat;
 
 // Configure the client
-var options = new LmStudioClientOptions
+var options = new LMStudioClientOptions
 {
     HttpClient = new HttpClient
     {
@@ -42,7 +42,7 @@ var options = new LmStudioClientOptions
 };
 
 // Create client instance
-using var client = new LmStudioSharpClient(options);
+var client = new LMStudioSharpClient(options);
 
 // List available models
 var models = await client.ListModelsAsync();
